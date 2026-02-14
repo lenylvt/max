@@ -3,68 +3,82 @@
 
   let isTranslating = false;
   let isTranslated = false;
-  let originalTexts = new Map();
+  let originals = new Map();
   let indicator = null;
 
-  // ── Text Node Extraction ──────────────────────────────────────────────
+  // ── Target selectors — leaf block elements with readable text ──────────
 
-  const SKIP_TAGS = new Set([
-    "SCRIPT", "STYLE", "NOSCRIPT", "SVG", "MATH", "CODE", "PRE",
-    "TEXTAREA", "INPUT", "SELECT", "OPTION", "IFRAME", "CANVAS",
-    "VIDEO", "AUDIO", "IMG", "BR", "HR",
-  ]);
+  const TARGETS =
+    "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, figcaption, dt, dd, summary, caption, label";
 
-  const SKIP_SELECTORS = [
-    ".ailens-overlay", ".ailens-search-bar", ".ailens-preview-card",
+  const BLOCK_CHILDREN =
+    "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, figcaption, dt, dd, summary, caption, ul, ol, table, div, section, article";
+
+  const SKIP_CLOSEST = [
+    ".ailens-overlay",
+    ".ailens-search-bar",
+    ".ailens-preview-card",
     ".ailens-translate-indicator",
+    "nav",
+    "footer",
+    "header",
+    "[role='navigation']",
+    "[role='banner']",
+    "[role='contentinfo']",
   ];
 
-  function shouldSkip(node) {
-    const el = node.parentElement;
-    if (!el) return true;
-    if (SKIP_TAGS.has(el.tagName)) return true;
-    for (const sel of SKIP_SELECTORS) {
-      if (el.closest(sel)) return true;
+  // ── Collect translatable elements — fast querySelectorAll ──────────────
+
+  function collectElements() {
+    const all = document.querySelectorAll(TARGETS);
+    const els = [];
+
+    for (const el of all) {
+      // Skip our own UI and nav/footer noise
+      let skip = false;
+      for (const sel of SKIP_CLOSEST) {
+        if (el.closest(sel)) {
+          skip = true;
+          break;
+        }
+      }
+      if (skip) continue;
+
+      // Skip hidden elements
+      if (!el.offsetParent && el.tagName !== "BODY" && el.tagName !== "HTML")
+        continue;
+
+      // Skip if contains other block children (not a leaf)
+      if (el.querySelector(BLOCK_CHILDREN)) continue;
+
+      // Get visible text
+      const text = el.innerText?.trim();
+      if (!text || text.length < 3) continue;
+
+      // Skip purely numeric or symbol-only
+      if (/^[\d\s.,;:!?%$€£#@*()\-+=/<>]+$/.test(text)) continue;
+
+      els.push(el);
     }
-    return false;
+
+    return els;
   }
 
-  function collectTextNodes() {
-    const nodes = [];
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node) {
-          if (shouldSkip(node)) return NodeFilter.FILTER_REJECT;
-          const text = node.textContent.trim();
-          if (text.length < 2) return NodeFilter.FILTER_REJECT;
-          if (/^\d+$/.test(text)) return NodeFilter.FILTER_REJECT;
-          return NodeFilter.FILTER_ACCEPT;
-        },
-      },
-    );
-    while (walker.nextNode()) {
-      nodes.push(walker.currentNode);
-    }
-    return nodes;
-  }
+  // ── Chunk elements into batches for fewer API calls ────────────────────
 
-  // ── Chunk text nodes for batch translation ────────────────────────────
-
-  function chunkNodes(nodes, maxChars = 3000) {
+  function chunkElements(els, maxChars = 4000) {
     const chunks = [];
     let current = [];
     let currentLen = 0;
 
-    for (const node of nodes) {
-      const text = node.textContent.trim();
+    for (const el of els) {
+      const text = el.innerText.trim();
       if (currentLen + text.length > maxChars && current.length > 0) {
         chunks.push(current);
         current = [];
         currentLen = 0;
       }
-      current.push(node);
+      current.push(el);
       currentLen += text.length;
     }
     if (current.length > 0) chunks.push(current);
@@ -81,9 +95,10 @@
     }
 
     indicator.className = `ailens-translate-indicator ailens-translate-${type}`;
-    indicator.innerHTML = type === "loading"
-      ? `<div class="ailens-translate-spinner"></div><span>${escapeHtml(text)}</span>`
-      : `<span>${escapeHtml(text)}</span>`;
+    indicator.innerHTML =
+      type === "loading"
+        ? `<div class="ailens-translate-spinner"></div><span>${esc(text)}</span>`
+        : `<span>${esc(text)}</span>`;
 
     indicator.classList.add("ailens-translate-visible");
 
@@ -94,8 +109,52 @@
     }
   }
 
-  function hideIndicator() {
-    if (indicator) indicator.classList.remove("ailens-translate-visible");
+  // ── Apply translation to an element's text nodes ──────────────────────
+
+  function applyTranslation(el, translatedText) {
+    // Walk only this element's text nodes and replace proportionally
+    const textNodes = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const t = walker.currentNode.textContent.trim();
+      if (t.length > 0) textNodes.push(walker.currentNode);
+    }
+
+    if (textNodes.length === 0) return;
+
+    if (textNodes.length === 1) {
+      // Simple case — single text node, just replace preserving whitespace
+      const node = textNodes[0];
+      const lead = node.textContent.match(/^\s*/)[0];
+      const trail = node.textContent.match(/\s*$/)[0];
+      node.textContent = lead + translatedText + trail;
+      return;
+    }
+
+    // Multiple text nodes — split translated text proportionally by original lengths
+    const originalLengths = textNodes.map((n) => n.textContent.trim().length);
+    const totalOriginal = originalLengths.reduce((a, b) => a + b, 0);
+    const words = translatedText.split(/\s+/);
+    const totalWords = words.length;
+
+    let wordIdx = 0;
+    for (let i = 0; i < textNodes.length; i++) {
+      const node = textNodes[i];
+      const lead = node.textContent.match(/^\s*/)[0];
+      const trail = node.textContent.match(/\s*$/)[0];
+      const proportion = originalLengths[i] / totalOriginal;
+
+      let count;
+      if (i === textNodes.length - 1) {
+        count = totalWords - wordIdx;
+      } else {
+        count = Math.max(1, Math.round(proportion * totalWords));
+      }
+
+      const slice = words.slice(wordIdx, wordIdx + count).join(" ");
+      node.textContent = lead + slice + trail;
+      wordIdx += count;
+    }
   }
 
   // ── Translation Logic ─────────────────────────────────────────────────
@@ -109,7 +168,7 @@
     }
 
     isTranslating = true;
-    originalTexts.clear();
+    originals.clear();
 
     let settings;
     try {
@@ -120,37 +179,39 @@
       return;
     }
 
-    const targetLang = settings.translateLanguage || settings.responseLanguage || "English";
-    if (targetLang === "auto") {
+    const targetLang =
+      settings.translateLanguage === "auto"
+        ? settings.responseLanguage
+        : settings.translateLanguage || settings.responseLanguage || "English";
+
+    if (!targetLang || targetLang === "auto") {
       showIndicator("Set a target language in settings", "error");
       isTranslating = false;
       return;
     }
 
-    const nodes = collectTextNodes();
-    if (nodes.length === 0) {
-      showIndicator("No text to translate", "error");
+    const els = collectElements();
+    if (els.length === 0) {
+      showIndicator("No text found", "error");
       isTranslating = false;
       return;
     }
 
-    const chunks = chunkNodes(nodes, 2500);
-    const total = chunks.length;
-    showIndicator(`Translating… 0/${total}`, "loading");
+    const chunks = chunkElements(els, 4000);
+    showIndicator(`Translating… 0/${chunks.length}`, "loading");
 
     let completed = 0;
 
     for (const chunk of chunks) {
       if (!isTranslating) break;
 
-      const texts = chunk.map((n) => n.textContent.trim());
-      const separator = "\n|||SPLIT|||\n";
-      const joined = texts.join(separator);
+      const texts = chunk.map((el) => el.innerText.trim());
+      const joined = texts.join("\n|||SPLIT|||\n");
 
       try {
         const translated = await browser.runtime.sendMessage({
           action: "translateText",
-          data: { text: joined, targetLang, separator },
+          data: { text: joined, targetLang },
         });
 
         if (!isTranslating) break;
@@ -158,45 +219,45 @@
         const parts = translated.split(/\|\|\|SPLIT\|\|\|/);
 
         for (let i = 0; i < chunk.length; i++) {
-          const node = chunk[i];
-          const original = node.textContent;
-          const translatedText = (parts[i] || "").trim();
+          const el = chunk[i];
+          const result = (parts[i] || "").trim();
 
-          if (translatedText && translatedText !== original.trim()) {
-            originalTexts.set(node, original);
-            // Preserve leading/trailing whitespace from original
-            const leadSpace = original.match(/^\s*/)[0];
-            const trailSpace = original.match(/\s*$/)[0];
-            node.textContent = leadSpace + translatedText + trailSpace;
+          if (result && result !== texts[i]) {
+            // Store original innerHTML for perfect restore
+            originals.set(el, el.innerHTML);
+            applyTranslation(el, result);
           }
         }
       } catch (err) {
-        console.error("AI Lens translate chunk error:", err);
+        console.error("AI Lens translate error:", err);
       }
 
       completed++;
-      showIndicator(`Translating… ${completed}/${total}`, "loading");
+      showIndicator(`Translating… ${completed}/${chunks.length}`, "loading");
     }
 
     isTranslating = false;
 
-    if (originalTexts.size > 0) {
+    if (originals.size > 0) {
       isTranslated = true;
-      showIndicator(`Translated to ${targetLang} — press again to revert`, "done");
+      showIndicator(
+        `Translated to ${targetLang} — press again to revert`,
+        "done",
+      );
     } else {
       showIndicator("Nothing was translated", "error");
     }
   }
 
   function revertTranslation() {
-    for (const [node, original] of originalTexts) {
+    for (const [el, html] of originals) {
       try {
-        node.textContent = original;
+        el.innerHTML = html;
       } catch {
-        // Node may no longer be in DOM
+        // Element may be gone
       }
     }
-    originalTexts.clear();
+    originals.clear();
     isTranslated = false;
     showIndicator("Reverted to original", "done");
   }
@@ -209,20 +270,18 @@
     }
   });
 
-  // ── Keyboard Shortcut (custom, from settings) ─────────────────────────
+  // ── Keyboard Shortcut ─────────────────────────────────────────────────
 
   let cachedShortcut = null;
 
-  async function getTranslateShortcut() {
+  (async () => {
     try {
-      const settings = await browser.runtime.sendMessage({ action: "getSettings" });
-      return settings.shortcuts?.translatePage || "Ctrl+Shift+T";
+      const s = await browser.runtime.sendMessage({ action: "getSettings" });
+      cachedShortcut = s.shortcuts?.translatePage || "Ctrl+Shift+T";
     } catch {
-      return "Ctrl+Shift+T";
+      cachedShortcut = "Ctrl+Shift+T";
     }
-  }
-
-  getTranslateShortcut().then((s) => (cachedShortcut = s));
+  })();
 
   document.addEventListener("keydown", (e) => {
     if (!cachedShortcut) return;
@@ -246,9 +305,9 @@
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
+  function esc(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
   }
 })();
