@@ -33,6 +33,12 @@
       "js": ["content-translate.js"],
       "css": ["content-translate.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/marked.min.js", "lib/DOMPurify.min.js", "content-ask.js"],
+      "css": ["content-ask.css"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
