@@ -69,6 +69,27 @@
   color: #fca5a5;
 }
 
+/* ── Revert Button ──────────────────────────────────────────────────────── */
+
+.ailens-translate-revert-btn {
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.ailens-translate-revert-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* ── Light Mode Override ─────────────────────────────────────────────────── */
 
 @media (prefers-color-scheme: light) {
@@ -96,5 +117,16 @@
 
   .ailens-translate-error {
     color: #dc2626;
+  }
+
+  .ailens-translate-revert-btn {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
+    color: #37352f;
+  }
+
+  .ailens-translate-revert-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.15);
   }
 }

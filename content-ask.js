@@ -1,24 +1,31 @@
 (() => {
   "use strict";
 
+  const { escapeHtml, renderInlineMarkdown } = window.__ailens;
+
   let panel = null;
   let isOpen = false;
   let selectedText = "";
   let selectionRange = null;
   let selectionMarks = [];
+  let highlightApplied = false;
 
-  // ── Highlight the selection so it stays visible after focus moves ──────
+  // ── Highlight the selection with custom marks (preserves visual after focus moves) ──
 
   function highlightSelection() {
-    clearSelectionHighlight();
+    if (highlightApplied) return;
 
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+    if (!selection || selection.rangeCount === 0) {
+      // Selection already gone — try to use stored range
+      if (!selectionRange) return;
+    }
 
-    const range = selection.getRangeAt(0);
-    if (range.collapsed) return;
+    const range = selection?.rangeCount > 0
+      ? selection.getRangeAt(0)
+      : selectionRange;
+    if (!range || range.collapsed) return;
 
-    // Walk through all text nodes in the range and wrap them
     const treeWalker = document.createTreeWalker(
       range.commonAncestorContainer.nodeType === Node.TEXT_NODE
         ? range.commonAncestorContainer.parentElement
@@ -29,7 +36,6 @@
           if (node.parentElement?.closest(".ailens-ask-panel")) {
             return NodeFilter.FILTER_REJECT;
           }
-          // Check if this text node intersects with the selection range
           const nodeRange = document.createRange();
           nodeRange.selectNodeContents(node);
           if (
@@ -52,7 +58,6 @@
       try {
         const highlightRange = document.createRange();
 
-        // Determine the portion of this text node that is selected
         if (
           textNode === range.startContainer &&
           textNode === range.endContainer
@@ -76,12 +81,13 @@
         highlightRange.surroundContents(mark);
         selectionMarks.push(mark);
       } catch {
-        // Node may have been split or modified, skip
+        // Node may have been split or modified
       }
     }
 
-    // Clear native selection after we've created our own highlights
-    selection.removeAllRanges();
+    // Clear native selection now that custom highlight is in place
+    if (selection) selection.removeAllRanges();
+    highlightApplied = true;
   }
 
   function clearSelectionHighlight() {
@@ -93,6 +99,7 @@
       }
     }
     selectionMarks = [];
+    highlightApplied = false;
   }
 
   // ── Panel UI (input + answer) ─────────────────────────────────────────
@@ -115,6 +122,11 @@
 
     const input = el.querySelector(".ailens-ask-panel-input");
     const submitBtn = el.querySelector(".ailens-ask-panel-submit");
+
+    // When user clicks into the input, apply custom highlight to preserve visual
+    input.addEventListener("focus", () => {
+      highlightSelection();
+    });
 
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -142,24 +154,20 @@
   function openPanel() {
     if (!panel) panel = createPanel();
 
-    // Highlight the selection before we steal focus
-    highlightSelection();
-
-    // Clear previous answer
+    // Clear previous state
     const answerEl = panel.querySelector(".ailens-ask-panel-answer");
     answerEl.innerHTML = "";
     answerEl.classList.remove("ailens-ask-panel-answer-visible");
 
-    // Clear input
     const input = panel.querySelector(".ailens-ask-panel-input");
     input.value = "";
 
-    // Position panel near the selection
+    // Position panel near the selection — do NOT focus, keep native selection alive
     positionPanel();
 
     requestAnimationFrame(() => {
       panel.classList.add("ailens-ask-panel-visible");
-      input.focus();
+      // No focus here — native selection stays, right-click works
     });
 
     isOpen = true;
@@ -177,12 +185,10 @@
     let left = rect.left + scrollX + rect.width / 2 - panelWidth / 2;
     let top = rect.bottom + scrollY + 10;
 
-    // Keep within viewport horizontally
     const maxLeft = window.innerWidth + scrollX - panelWidth - 16;
     if (left < scrollX + 16) left = scrollX + 16;
     if (left > maxLeft) left = maxLeft;
 
-    // If it would go below viewport, show above
     if (rect.bottom + panelEstimatedHeight + 10 > window.innerHeight) {
       top = rect.top + scrollY - panelEstimatedHeight - 10;
       if (top < scrollY + 16) top = scrollY + 16;
@@ -221,10 +227,8 @@
 
     try {
       const result = await browser.runtime.sendMessage({
-        action: "askPageQuestion",
+        action: "askSelectionQuestion",
         data: {
-          url: location.href,
-          title: document.title,
           text: selectedText.slice(0, 8000),
           question: question,
         },
@@ -233,42 +237,7 @@
       if (!isOpen) return;
 
       let html = result.answer || "No answer available.";
-
-      if (typeof marked !== "undefined") {
-        const renderer = new marked.Renderer();
-        renderer.table = () => "";
-        renderer.tablerow = () => "";
-        renderer.tablecell = () => "";
-        renderer.image = () => "";
-        html = marked.parse(html, { renderer });
-        if (typeof DOMPurify !== "undefined") {
-          html = DOMPurify.sanitize(html, {
-            ALLOWED_TAGS: [
-              "p",
-              "strong",
-              "em",
-              "b",
-              "i",
-              "br",
-              "ul",
-              "ol",
-              "li",
-              "code",
-              "pre",
-              "a",
-              "h1",
-              "h2",
-              "h3",
-              "h4",
-              "blockquote",
-              "hr",
-            ],
-            ALLOWED_ATTR: ["href", "target"],
-          });
-        }
-      } else {
-        html = escapeHtml(html);
-      }
+      html = renderInlineMarkdown(html);
 
       answerEl.innerHTML = `<div class="ailens-ask-answer-content">${html}</div>`;
     } catch (err) {
@@ -296,10 +265,10 @@
       const focus = selection.focusNode?.parentElement;
       if (
         anchor?.closest(
-          ".ailens-ask-panel, .ailens-search-bar, .ailens-summary-overlay",
+          ".ailens-ask-panel, .ailens-search-bar, .ailens-overlay, .ailens-preview-card",
         ) ||
         focus?.closest(
-          ".ailens-ask-panel, .ailens-search-bar, .ailens-summary-overlay",
+          ".ailens-ask-panel, .ailens-search-bar, .ailens-overlay, .ailens-preview-card",
         )
       ) {
         return;
@@ -315,13 +284,14 @@
       const rect = selectionRange.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
 
-      // Open panel directly
       openPanel();
     }, 10);
   }
 
   document.addEventListener("mouseup", (e) => {
     if (e.target.closest(".ailens-ask-panel")) return;
+    // Don't trigger on right-click
+    if (e.button === 2) return;
     handleSelectionChange();
   });
 
@@ -332,12 +302,4 @@
       closePanel();
     }
   });
-
-  // ── Helpers ───────────────────────────────────────────────────────────
-
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
 })();

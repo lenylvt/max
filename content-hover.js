@@ -1,6 +1,8 @@
 (() => {
   "use strict";
 
+  const { escapeHtml, escapeAttr } = window.__ailens;
+
   // ── Search Engine Link Selectors ────────────────────────────────────────
   const SEARCH_SELECTORS = {
     google:
@@ -160,6 +162,12 @@
 
   const HOVER_DELAY = isSearchEngine ? 600 : 800;
 
+  // Don't show preview while user is selecting text
+  function hasActiveSelection() {
+    const sel = window.getSelection();
+    return sel && sel.toString().trim().length > 0;
+  }
+
   // Use event delegation for both modes
   document.addEventListener("mouseover", (e) => {
     const link = e.target.closest("a");
@@ -171,9 +179,15 @@
       return;
     }
 
+    // Don't trigger hover preview while user has text selected
+    if (hasActiveSelection()) return;
+
     clearTimeout(hoverTimer);
     clearTimeout(leaveTimer);
-    hoverTimer = setTimeout(() => showCard(link), HOVER_DELAY);
+    hoverTimer = setTimeout(() => {
+      // Re-check selection right before showing (user may have selected during delay)
+      if (!hasActiveSelection()) showCard(link);
+    }, HOVER_DELAY);
   });
 
   document.addEventListener("mouseout", (e) => {
@@ -194,19 +208,9 @@
     hideCard();
   });
 
-  // ── Helpers ─────────────────────────────────────────────────────────────
-
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  function escapeAttr(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  }
+  // Hide card on right-click so context menu works normally
+  document.addEventListener("contextmenu", () => {
+    clearTimeout(hoverTimer);
+    hideCard();
+  });
 })();

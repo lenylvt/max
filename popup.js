@@ -1,11 +1,22 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const summarizeBtn = document.getElementById("summarize-btn");
-  const searchBtn = document.getElementById("search-btn");
   const statusEl = document.getElementById("provider-status");
   const statusText = document.getElementById("status-text");
-  const settingsLink = document.getElementById("settings-link");
 
-  // Load provider status
+  // ── Helper: send action to active tab ─────────────────────────────────
+
+  async function sendToActiveTab(action) {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action });
+      window.close();
+    }
+  }
+
+  // ── Load provider status ──────────────────────────────────────────────
+
   try {
     const settings = await browser.runtime.sendMessage({
       action: "getSettings",
@@ -18,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const provider = providers[settings.provider];
       const name = provider?.name || settings.provider;
       const model = settings.model || provider?.defaultModel || "";
-      statusText.textContent = `${name} · ${model}`;
+      statusText.textContent = `${name} \u00b7 ${model}`;
       statusEl.className = "provider-pill configured";
     } else {
       statusText.textContent = "No API key configured";
@@ -28,45 +39,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     statusText.textContent = "Error loading settings";
   }
 
-  // Summarize button
-  summarizeBtn.addEventListener("click", async () => {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (tab?.id) {
-      await browser.tabs.sendMessage(tab.id, { action: "triggerSummary" });
-      window.close();
-    }
+  // ── Button actions ────────────────────────────────────────────────────
+
+  document.getElementById("summarize-btn").addEventListener("click", () => {
+    sendToActiveTab("triggerSummary");
   });
 
-  // Search button
-  searchBtn.addEventListener("click", async () => {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (tab?.id) {
-      await browser.tabs.sendMessage(tab.id, { action: "triggerSearch" });
-      window.close();
-    }
+  document.getElementById("search-btn").addEventListener("click", () => {
+    sendToActiveTab("triggerSearch");
   });
 
-  // Translate button
-  const translateBtn = document.getElementById("translate-btn");
-  translateBtn.addEventListener("click", async () => {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (tab?.id) {
-      await browser.tabs.sendMessage(tab.id, { action: "triggerTranslate" });
-      window.close();
-    }
+  document.getElementById("translate-btn").addEventListener("click", () => {
+    sendToActiveTab("triggerTranslate");
   });
 
-  // Settings button
-  settingsLink.addEventListener("click", (e) => {
+  document.getElementById("settings-link").addEventListener("click", (e) => {
     e.preventDefault();
     browser.runtime.openOptionsPage();
     window.close();

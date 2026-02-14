@@ -159,6 +159,13 @@ const QUESTION_SYSTEM = `You are an expert assistant that answers questions abou
 - If the answer cannot be found in the page content, say so clearly
 - Keep answers focused and under 200 words unless a longer explanation is needed`;
 
+const SELECTION_QUESTION_SYSTEM = `You are an expert assistant. The user has selected a specific piece of text and is asking a question about it.
+- Answer directly about the selected text
+- Use markdown formatting for clarity
+- If the user asks for a translation, translate the text
+- If the user asks what it means, explain it
+- Keep answers focused and under 200 words unless a longer explanation is needed`;
+
 function buildPreviewPrompt(page) {
   return `URL: ${page.url}\nTitle: ${page.title}\nContent: ${page.text}`;
 }
@@ -190,6 +197,8 @@ browser.runtime.onMessage.addListener((msg, _sender) => {
       return handleSummarize(msg.data);
     case "askPageQuestion":
       return handleAskPageQuestion(msg.data);
+    case "askSelectionQuestion":
+      return handleAskSelectionQuestion(msg.data);
     case "translateText":
       return handleTranslate(msg.data);
     case "getSettings":
@@ -312,6 +321,21 @@ async function handleAskPageQuestion(data) {
   return { answer };
 }
 
+async function handleAskSelectionQuestion(data) {
+  const { text, question } = data;
+  if (!question) throw new Error("No question provided");
+
+  const settings = await getSettings();
+  const langInstruction = getLanguageInstruction(settings);
+  const answer = await aiComplete(
+    settings,
+    SELECTION_QUESTION_SYSTEM + langInstruction,
+    `Selected text: ${(text || "").slice(0, 8000)}\n\nUser Question: ${question}`,
+  );
+
+  return { answer };
+}
+
 async function handleTranslate(data) {
   const { text, targetLang, separator } = data;
   if (!text || !targetLang) throw new Error("Missing translate parameters");
@@ -345,9 +369,7 @@ browser.commands.onCommand.addListener(async (command) => {
   });
   if (!tab?.id) return;
 
-  if (command === "toggle-summary") {
-    browser.tabs.sendMessage(tab.id, { action: "triggerSummary" });
-  } else if (command === "toggle-search") {
+  if (command === "toggle-search") {
     browser.tabs.sendMessage(tab.id, { action: "triggerSearch" });
   } else if (command === "toggle-translate") {
     browser.tabs.sendMessage(tab.id, { action: "triggerTranslate" });

@@ -13,6 +13,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const saveBtn = document.getElementById("save-btn");
   const statusMsg = document.getElementById("status-msg");
   const languageEl = document.getElementById("response-language");
+  const shortcutSummaryEl = document.getElementById("shortcut-summary");
+  const shortcutRecordSummaryBtn = document.getElementById(
+    "shortcut-record-summary",
+  );
   const shortcutSearchEl = document.getElementById("shortcut-search");
   const shortcutRecordBtn = document.getElementById("shortcut-record");
   const shortcutTranslateEl = document.getElementById("shortcut-translate");
@@ -42,6 +46,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     tempValueEl.textContent = temperatureEl.value;
     languageEl.value = currentSettings.responseLanguage || "auto";
     translateLanguageEl.value = currentSettings.translateLanguage || "auto";
+    shortcutSummaryEl.value =
+      currentSettings.shortcuts?.toggleSummary || "Ctrl+Shift+S";
     shortcutSearchEl.value =
       currentSettings.shortcuts?.searchInPage || "Ctrl+Shift+F";
     shortcutTranslateEl.value =
@@ -212,6 +218,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ── Shortcut Recording ──────────────────────────────────────────────────
 
+  shortcutRecordSummaryBtn.addEventListener("click", () => {
+    if (isRecording && recordingTarget === shortcutSummaryEl) {
+      stopRecording();
+    } else {
+      startRecording(shortcutSummaryEl);
+    }
+  });
+
   shortcutRecordBtn.addEventListener("click", () => {
     if (isRecording && recordingTarget === shortcutSearchEl) {
       stopRecording();
@@ -262,6 +276,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     stopRecording();
   }
 
+  shortcutSummaryEl.addEventListener("keydown", handleShortcutKeydown);
   shortcutSearchEl.addEventListener("keydown", handleShortcutKeydown);
   shortcutTranslateEl.addEventListener("keydown", handleShortcutKeydown);
 
@@ -285,6 +300,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       responseLanguage: languageEl.value,
       translateLanguage: translateLanguageEl.value,
       shortcuts: {
+        toggleSummary: shortcutSummaryEl.value || "Ctrl+Shift+S",
         searchInPage: shortcutSearchEl.value || "Ctrl+Shift+F",
         translatePage: shortcutTranslateEl.value || "Ctrl+Shift+T",
       },
@@ -320,6 +336,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       responseLanguage: languageEl.value,
       translateLanguage: translateLanguageEl.value,
       shortcuts: {
+        toggleSummary: shortcutSummaryEl.value || "Ctrl+Shift+S",
         searchInPage: shortcutSearchEl.value || "Ctrl+Shift+F",
         translatePage: shortcutTranslateEl.value || "Ctrl+Shift+T",
       },

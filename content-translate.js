@@ -1,6 +1,8 @@
 (() => {
   "use strict";
 
+  const { escapeHtml, matchShortcut, loadShortcut } = window.__ailens;
+
   let isTranslating = false;
   let isTranslated = false;
   let originals = new Map();
@@ -9,8 +11,10 @@
   // ── Target selectors — leaf block elements with readable text ──────────
 
   const TARGETS =
-    "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, figcaption, dt, dd, summary, caption, label";
+    "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, figcaption, dt, dd, summary, caption, label, div, section, article, span";
 
+  // Elements that count as "block children" — if a TARGETS element contains
+  // any of these, it's not a leaf and we skip it (we'll translate its children instead).
   const BLOCK_CHILDREN =
     "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, figcaption, dt, dd, summary, caption, ul, ol, table, div, section, article";
 
@@ -19,6 +23,7 @@
     ".ailens-search-bar",
     ".ailens-preview-card",
     ".ailens-translate-indicator",
+    ".ailens-ask-panel",
     "nav",
     "footer",
     "header",
@@ -56,7 +61,10 @@
       if (!text || text.length < 3) continue;
 
       // Skip purely numeric or symbol-only
-      if (/^[\d\s.,;:!?%$€£#@*()\-+=/<>]+$/.test(text)) continue;
+      if (/^[\d\s.,;:!?%$\u20ac\u00a3#@*()\-+=/<>]+$/.test(text)) continue;
+
+      // For span elements, only include those with substantial text (avoid icons, badges etc.)
+      if (el.tagName === "SPAN" && text.length < 15) continue;
 
       els.push(el);
     }
@@ -87,7 +95,7 @@
 
   // ── Indicator UI ──────────────────────────────────────────────────────
 
-  function showIndicator(text, type = "loading") {
+  function showIndicator(text, type = "loading", persistent = false) {
     if (!indicator) {
       indicator = document.createElement("div");
       indicator.className = "ailens-translate-indicator";
@@ -95,18 +103,31 @@
     }
 
     indicator.className = `ailens-translate-indicator ailens-translate-${type}`;
-    indicator.innerHTML =
-      type === "loading"
-        ? `<div class="ailens-translate-spinner"></div><span>${esc(text)}</span>`
-        : `<span>${esc(text)}</span>`;
+
+    if (type === "loading") {
+      indicator.innerHTML = `<div class="ailens-translate-spinner"></div><span>${escapeHtml(text)}</span>`;
+    } else if (type === "done" && persistent) {
+      // Persistent revert button
+      indicator.innerHTML = `<span>${escapeHtml(text)}</span><button class="ailens-translate-revert-btn">Revert</button>`;
+      indicator.querySelector(".ailens-translate-revert-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        revertTranslation();
+      });
+    } else {
+      indicator.innerHTML = `<span>${escapeHtml(text)}</span>`;
+    }
 
     indicator.classList.add("ailens-translate-visible");
 
-    if (type === "done" || type === "error") {
+    if (!persistent && (type === "done" || type === "error")) {
       setTimeout(() => {
         if (indicator) indicator.classList.remove("ailens-translate-visible");
       }, 2500);
     }
+  }
+
+  function hideIndicator() {
+    if (indicator) indicator.classList.remove("ailens-translate-visible");
   }
 
   // ── Apply translation to an element's text nodes ──────────────────────
@@ -198,9 +219,9 @@
     }
 
     const chunks = chunkElements(els, 4000);
-    showIndicator(`Translating… 0/${chunks.length}`, "loading");
-
     let completed = 0;
+    let failed = 0;
+    showIndicator(`Translating\u2026 0/${chunks.length}`, "loading");
 
     for (const chunk of chunks) {
       if (!isTranslating) break;
@@ -228,12 +249,16 @@
             applyTranslation(el, result);
           }
         }
+        completed++;
       } catch (err) {
         console.error("AI Lens translate error:", err);
+        failed++;
       }
 
-      completed++;
-      showIndicator(`Translating… ${completed}/${chunks.length}`, "loading");
+      showIndicator(
+        `Translating\u2026 ${completed + failed}/${chunks.length}`,
+        "loading",
+      );
     }
 
     isTranslating = false;
@@ -241,9 +266,12 @@
     if (originals.size > 0) {
       isTranslated = true;
       showIndicator(
-        `Translated to ${targetLang} — press again to revert`,
+        `Translated to ${targetLang}`,
         "done",
+        true, // persistent — shows revert button
       );
+    } else if (failed > 0) {
+      showIndicator(`Translation failed (${failed} errors)`, "error");
     } else {
       showIndicator("Nothing was translated", "error");
     }
@@ -259,6 +287,7 @@
     }
     originals.clear();
     isTranslated = false;
+    hideIndicator();
     showIndicator("Reverted to original", "done");
   }
 
@@ -273,41 +302,14 @@
   // ── Keyboard Shortcut ─────────────────────────────────────────────────
 
   let cachedShortcut = null;
-
-  (async () => {
-    try {
-      const s = await browser.runtime.sendMessage({ action: "getSettings" });
-      cachedShortcut = s.shortcuts?.translatePage || "Ctrl+Shift+T";
-    } catch {
-      cachedShortcut = "Ctrl+Shift+T";
-    }
-  })();
+  loadShortcut("translatePage", "Ctrl+Shift+T").then(
+    (s) => (cachedShortcut = s),
+  );
 
   document.addEventListener("keydown", (e) => {
-    if (!cachedShortcut) return;
-
-    const parts = cachedShortcut.split("+").map((p) => p.trim().toLowerCase());
-    const needsCtrl = parts.includes("ctrl");
-    const needsShift = parts.includes("shift");
-    const needsAlt = parts.includes("alt");
-    const key = parts.filter((p) => !["ctrl", "shift", "alt"].includes(p))[0];
-
-    if (
-      e.ctrlKey === needsCtrl &&
-      e.shiftKey === needsShift &&
-      e.altKey === needsAlt &&
-      e.key.toLowerCase() === key
-    ) {
+    if (matchShortcut(e, cachedShortcut)) {
       e.preventDefault();
       translatePage();
     }
   });
-
-  // ── Helpers ───────────────────────────────────────────────────────────
-
-  function esc(str) {
-    const d = document.createElement("div");
-    d.textContent = str;
-    return d.innerHTML;
-  }
 })();

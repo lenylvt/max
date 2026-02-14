@@ -1,43 +1,18 @@
 (() => {
   "use strict";
 
+  const { escapeHtml, matchShortcut, loadShortcut, extractPageContent, renderInlineMarkdown } =
+    window.__ailens;
+
   let searchBar = null;
   let isOpen = false;
   let highlights = [];
   let currentHighlight = -1;
 
-  // ── Page Content Extraction ─────────────────────────────────────────────
+  // ── SVG icons ──────────────────────────────────────────────────────────
 
-  function extractPageContent() {
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode(node) {
-          const tag = node.parentElement?.tagName;
-          if (
-            tag === "SCRIPT" ||
-            tag === "STYLE" ||
-            tag === "NOSCRIPT" ||
-            tag === "SVG"
-          ) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (node.textContent.trim().length === 0) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          return NodeFilter.FILTER_ACCEPT;
-        },
-      },
-    );
-
-    let text = "";
-    while (walker.nextNode()) {
-      text += walker.currentNode.textContent + " ";
-    }
-
-    return text.replace(/\s+/g, " ").trim().slice(0, 8000);
-  }
+  const ICON_SEARCH = `<circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>`;
+  const ICON_AI = `<path d="M8 2l1.5 4.5L14 8l-4.5 1.5L8 14l-1.5-4.5L2 8l4.5-1.5z"/>`;
 
   // ── Search Bar UI ──────────────────────────────────────────────────────
 
@@ -48,8 +23,7 @@
       <div class="ailens-search-inner">
         <div class="ailens-search-input-wrap">
           <svg class="ailens-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6.5" cy="6.5" r="4.5"/>
-            <line x1="10" y1="10" x2="14" y2="14"/>
+            ${ICON_SEARCH}
           </svg>
           <input type="text" class="ailens-search-input" placeholder="Search or ask AI..." spellcheck="false" />
           <span class="ailens-search-count"></span>
@@ -86,6 +60,7 @@
         bar.querySelector(".ailens-search-answer").classList.remove("ailens-search-answer-visible");
       } else {
         clearHighlights();
+        setAIMode(true);
         updateCount("");
       }
     });
@@ -96,10 +71,8 @@
         const val = input.value.trim();
 
         if (val.startsWith("?")) {
-          // Explicit AI mode with ? prefix
           askAI(val.slice(1).trim());
         } else if (highlights.length === 0 && val.length > 0) {
-          // No text search results → automatically ask AI
           askAI(val);
         } else if (e.shiftKey) {
           navigateHighlight(-1);
@@ -125,6 +98,25 @@
     return bar;
   }
 
+  // ── Toggle search / AI visual mode ─────────────────────────────────────
+
+  function setAIMode(on) {
+    if (!searchBar) return;
+    const icon = searchBar.querySelector(".ailens-search-icon");
+    const prev = searchBar.querySelector(".ailens-search-prev");
+    const next = searchBar.querySelector(".ailens-search-next");
+
+    if (on) {
+      icon.innerHTML = ICON_AI;
+      prev.style.display = "none";
+      next.style.display = "none";
+    } else {
+      icon.innerHTML = ICON_SEARCH;
+      prev.style.display = "";
+      next.style.display = "";
+    }
+  }
+
   function openSearchBar() {
     if (isOpen) {
       searchBar?.querySelector(".ailens-search-input")?.focus();
@@ -135,6 +127,7 @@
 
     searchBar.classList.add("ailens-search-visible");
     isOpen = true;
+    setAIMode(false);
 
     requestAnimationFrame(() => {
       searchBar.querySelector(".ailens-search-input").focus();
@@ -148,6 +141,7 @@
     searchBar.querySelector(".ailens-search-answer").innerHTML = "";
     isOpen = false;
     clearHighlights();
+    setAIMode(false);
     updateCount("");
   }
 
@@ -157,6 +151,7 @@
     clearHighlights();
 
     if (!query || query.length < 2) {
+      setAIMode(false);
       updateCount("");
       return;
     }
@@ -218,10 +213,13 @@
     currentHighlight = -1;
 
     if (highlights.length > 0) {
+      setAIMode(false);
       navigateHighlight(1);
       updateCount(`${1} / ${highlights.length}`);
     } else {
-      updateCount("0 results");
+      // No results — switch to AI mode visually (icon + hide arrows), no text
+      setAIMode(true);
+      updateCount("");
     }
   }
 
@@ -275,13 +273,13 @@
     `;
 
     try {
-      const pageText = extractPageContent();
+      const page = extractPageContent();
       const result = await browser.runtime.sendMessage({
         action: "askPageQuestion",
         data: {
           url: location.href,
           title: document.title,
-          text: pageText,
+          text: page.text,
           question,
         },
       });
@@ -289,23 +287,7 @@
       if (!isOpen) return;
 
       let html = result.answer || "No answer available.";
-      // Render markdown as text-only (no tables, no images)
-      if (typeof marked !== "undefined") {
-        const renderer = new marked.Renderer();
-        // Strip tables to plain text
-        renderer.table = () => "";
-        renderer.tablerow = () => "";
-        renderer.tablecell = () => "";
-        // Strip images
-        renderer.image = () => "";
-        html = marked.parse(html, { renderer });
-        if (typeof DOMPurify !== "undefined") {
-          html = DOMPurify.sanitize(html, {
-            ALLOWED_TAGS: ["p", "strong", "em", "b", "i", "br", "ul", "ol", "li", "code", "pre", "a", "h1", "h2", "h3", "h4", "blockquote", "hr"],
-            ALLOWED_ATTR: ["href", "target"],
-          });
-        }
-      }
+      html = renderInlineMarkdown(html);
 
       answerEl.innerHTML = `<div class="ailens-search-answer-content">${html}</div>`;
     } catch (err) {
@@ -327,33 +309,13 @@
 
   // ── Keyboard Shortcut (manual, for customizable shortcut) ─────────────
 
-  async function getSearchShortcut() {
-    try {
-      const settings = await browser.runtime.sendMessage({ action: "getSettings" });
-      return settings.shortcuts?.searchInPage || "Ctrl+Shift+F";
-    } catch {
-      return "Ctrl+Shift+F";
-    }
-  }
-
   let cachedShortcut = null;
-  getSearchShortcut().then((s) => (cachedShortcut = s));
+  loadShortcut("searchInPage", "Ctrl+Shift+F").then(
+    (s) => (cachedShortcut = s),
+  );
 
   document.addEventListener("keydown", (e) => {
-    if (!cachedShortcut) return;
-
-    const parts = cachedShortcut.split("+").map((p) => p.trim().toLowerCase());
-    const needsCtrl = parts.includes("ctrl");
-    const needsShift = parts.includes("shift");
-    const needsAlt = parts.includes("alt");
-    const key = parts.filter((p) => !["ctrl", "shift", "alt"].includes(p))[0];
-
-    if (
-      e.ctrlKey === needsCtrl &&
-      e.shiftKey === needsShift &&
-      e.altKey === needsAlt &&
-      e.key.toLowerCase() === key
-    ) {
+    if (matchShortcut(e, cachedShortcut)) {
       e.preventDefault();
       if (isOpen) {
         closeSearchBar();
@@ -362,12 +324,4 @@
       }
     }
   });
-
-  // ── Helpers ────────────────────────────────────────────────────────────
-
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
 })();

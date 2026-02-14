@@ -12,13 +12,13 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content-hover.js"],
+      "js": ["lib/utils.js", "lib/marked.min.js", "lib/DOMPurify.min.js", "content-hover.js"],
       "css": ["content-hover.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/marked.min.js", "lib/DOMPurify.min.js", "content-summary.js"],
+      "js": ["content-summary.js"],
       "css": ["content-summary.css"],
       "run_at": "document_idle"
     },
@@ -36,7 +36,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/marked.min.js", "lib/DOMPurify.min.js", "content-ask.js"],
+      "js": ["content-ask.js"],
       "css": ["content-ask.css"],
       "run_at": "document_idle"
     }
@@ -54,13 +54,6 @@
     "open_in_tab": true
   },
   "commands": {
-    "toggle-summary": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+S",
-        "mac": "MacCtrl+Shift+S"
-      },
-      "description": "Toggle page summary"
-    },
     "toggle-search": {
       "suggested_key": {
         "default": "Ctrl+Shift+F",
