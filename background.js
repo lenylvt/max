@@ -1,0 +1,322 @@
+import { PROVIDERS, aiComplete, fetchModels } from "./lib/ai-client.js";
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+const DEFAULT_SETTINGS = {
+  provider: "openai",
+  apiKey: "",
+  model: "",
+  baseUrl: "",
+  temperature: 0.3,
+  responseLanguage: "auto",
+  shortcuts: {
+    searchInPage: "Ctrl+Shift+F",
+  },
+};
+
+async function getSettings() {
+  const { settings } = await browser.storage.local.get("settings");
+  return { ...DEFAULT_SETTINGS, ...settings };
+}
+
+async function saveSettings(settings) {
+  await browser.storage.local.set({ settings });
+}
+
+// ── Cache ─────────────────────────────────────────────────────────────────────
+
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+async function cacheGet(key) {
+  const data = await browser.storage.local.get(key);
+  const entry = data[key];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL) {
+    await browser.storage.local.remove(key);
+    return null;
+  }
+  return entry.value;
+}
+
+async function cacheSet(key, value) {
+  await browser.storage.local.set({ [key]: { value, ts: Date.now() } });
+}
+
+// ── Request Deduplication ─────────────────────────────────────────────────────
+
+const pendingRequests = new Map();
+
+function dedup(key, fn) {
+  if (pendingRequests.has(key)) return pendingRequests.get(key);
+  const promise = fn().finally(() => pendingRequests.delete(key));
+  pendingRequests.set(key, promise);
+  return promise;
+}
+
+// ── Page Fetching ─────────────────────────────────────────────────────────────
+
+async function fetchPageText(url, maxChars = 6000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const resp = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; AI-Lens/1.0)" },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const html = await resp.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    // Extract OG image
+    const ogImage =
+      doc.querySelector('meta[property="og:image"]')?.getAttribute("content") ||
+      "";
+
+    // Extract title
+    const title =
+      doc.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
+      doc.querySelector("title")?.textContent ||
+      "";
+
+    // Remove noise elements
+    for (const sel of [
+      "script",
+      "style",
+      "nav",
+      "header",
+      "footer",
+      "aside",
+      "iframe",
+      "noscript",
+      "svg",
+    ]) {
+      doc.querySelectorAll(sel).forEach((el) => el.remove());
+    }
+
+    // Get text content
+    const text = (doc.body?.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, maxChars);
+
+    return { title, text, ogImage, url };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ── Language Helper ───────────────────────────────────────────────────────────
+
+function getLanguageInstruction(settings) {
+  const lang = settings.responseLanguage || "auto";
+  if (lang === "auto") return "";
+  return `\nIMPORTANT: Respond entirely in ${lang}.`;
+}
+
+// ── AI Prompts ────────────────────────────────────────────────────────────────
+
+const PREVIEW_SYSTEM = `You are a concise summarizer. Given a web page's content, produce a JSON object with exactly two fields:
+- "title": a short, descriptive title (max 12 words)
+- "description": Only one full sentences describing what the page is about, covering the main points, key details, and context.
+Output ONLY valid JSON, no markdown fences, no extra text.`;
+
+const SUMMARY_SYSTEM = `You are an expert page summarizer producing Notion-style documents. Produce a well-structured Markdown summary following this exact format:
+
+# [emoji] Title of the page
+*A key question or subtitle about the content*
+
+[Introductory paragraph with **bold** on key terms.]
+
+---
+
+## [emoji] Key Findings / Main Points
+Detailed content for this section with clear explanations...
+
+## [emoji] Analysis / How It Works
+More detailed content...
+
+## [emoji] Implications / What This Means
+Content about broader impact or takeaways...
+
+---
+
+Guidelines:
+- 500-700 words total for thorough coverage
+- Use descriptive section headers with emojis
+- Bold important terms and key phrases
+- Include 3-5 well-developed sub-sections
+- Write in clear, engaging prose — not bullet-point lists
+- Each section should have 2-3 substantial paragraphs`;
+
+const QUESTION_SYSTEM = `You are an expert assistant that answers questions about web page content. Given the page content and a user question:
+- Answer directly and concisely based on the page content
+- Use markdown formatting for clarity
+- If the answer cannot be found in the page content, say so clearly
+- Keep answers focused and under 200 words unless a longer explanation is needed`;
+
+function buildPreviewPrompt(page) {
+  return `URL: ${page.url}\nTitle: ${page.title}\nContent: ${page.text}`;
+}
+
+function buildSummaryPrompt(page) {
+  return `URL: ${page.url}\nTitle: ${page.title}\nContent: ${page.text}`;
+}
+
+function buildQuestionPrompt(page, question) {
+  return `Page URL: ${page.url}\nPage Title: ${page.title}\nPage Content: ${page.text}\n\nUser Question: ${question}`;
+}
+
+// ── Message Handler ───────────────────────────────────────────────────────────
+
+browser.runtime.onMessage.addListener((msg, _sender) => {
+  switch (msg.action) {
+    case "fetchAndPreview":
+      return handlePreview(msg.url);
+    case "fetchAndSummarize":
+      return handleSummarize(msg.data);
+    case "askPageQuestion":
+      return handleAskPageQuestion(msg.data);
+    case "getSettings":
+      return getSettings();
+    case "saveSettings":
+      return saveSettings(msg.settings);
+    case "testConnection":
+      return handleTestConnection();
+    case "getProviders":
+      return Promise.resolve(PROVIDERS);
+    case "fetchModels":
+      return handleFetchModels(msg.settings);
+    default:
+      return false;
+  }
+});
+
+async function handleFetchModels(settings) {
+  try {
+    const models = await fetchModels(settings);
+    return { success: true, models };
+  } catch (err) {
+    const preset = PROVIDERS[settings.provider] || PROVIDERS.custom;
+    return { success: false, models: preset.models || [] };
+  }
+}
+
+async function handlePreview(url) {
+  return dedup(`preview::${url}`, async () => {
+    const cacheKey = `preview::${url}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return cached;
+
+    const page = await fetchPageText(url, 6000);
+    const settings = await getSettings();
+    const langInstruction = getLanguageInstruction(settings);
+    const raw = await aiComplete(
+      settings,
+      PREVIEW_SYSTEM + langInstruction,
+      buildPreviewPrompt(page),
+    );
+
+    let result;
+    try {
+      const cleaned = raw
+        .replace(/```json\s*/g, "")
+        .replace(/```\s*/g, "")
+        .trim();
+      result = JSON.parse(cleaned);
+    } catch {
+      result = { title: page.title || url, description: raw.slice(0, 200) };
+    }
+
+    result.ogImage = page.ogImage;
+    result.domain = new URL(url).hostname;
+    await cacheSet(cacheKey, result);
+    return result;
+  });
+}
+
+async function handleSummarize(data) {
+  const url = data?.url;
+  if (!url) throw new Error("No URL provided");
+
+  return dedup(`summary::${url}`, async () => {
+    const cacheKey = `summary::${url}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return cached;
+
+    let page;
+    if (data.text && data.title) {
+      page = {
+        url,
+        title: data.title,
+        text: data.text.slice(0, 8000),
+        ogImage: data.ogImage || "",
+      };
+    } else {
+      page = await fetchPageText(url, 8000);
+    }
+
+    const settings = await getSettings();
+    const langInstruction = getLanguageInstruction(settings);
+    const markdown = await aiComplete(
+      settings,
+      SUMMARY_SYSTEM + langInstruction,
+      buildSummaryPrompt(page),
+    );
+
+    const result = {
+      markdown,
+      title: page.title,
+      ogImage: page.ogImage,
+      url: page.url,
+      domain: new URL(url).hostname,
+    };
+
+    await cacheSet(cacheKey, result);
+    return result;
+  });
+}
+
+async function handleAskPageQuestion(data) {
+  const { url, title, text, question } = data;
+  if (!question) throw new Error("No question provided");
+
+  const page = { url: url || "", title: title || "", text: (text || "").slice(0, 8000) };
+  const settings = await getSettings();
+  const langInstruction = getLanguageInstruction(settings);
+  const answer = await aiComplete(
+    settings,
+    QUESTION_SYSTEM + langInstruction,
+    buildQuestionPrompt(page, question),
+  );
+
+  return { answer };
+}
+
+async function handleTestConnection() {
+  const settings = await getSettings();
+  const response = await aiComplete(
+    settings,
+    "You are a helpful assistant.",
+    'Say "OK" and nothing else.',
+  );
+  return { success: true, response: response.trim() };
+}
+
+// ── Keyboard Shortcut ─────────────────────────────────────────────────────────
+
+browser.commands.onCommand.addListener(async (command) => {
+  const [tab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (!tab?.id) return;
+
+  if (command === "toggle-summary") {
+    browser.tabs.sendMessage(tab.id, { action: "triggerSummary" });
+  } else if (command === "toggle-search") {
+    browser.tabs.sendMessage(tab.id, { action: "triggerSearch" });
+  }
+});
