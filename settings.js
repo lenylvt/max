@@ -15,11 +15,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const languageEl = document.getElementById("response-language");
   const shortcutSearchEl = document.getElementById("shortcut-search");
   const shortcutRecordBtn = document.getElementById("shortcut-record");
+  const shortcutTranslateEl = document.getElementById("shortcut-translate");
+  const shortcutRecordTranslateBtn = document.getElementById(
+    "shortcut-record-translate",
+  );
   const manageShortcutsLink = document.getElementById("manage-shortcuts-link");
+  const translateLanguageEl = document.getElementById("translate-language");
 
   let providers = {};
   let currentSettings = {};
   let isRecording = false;
+  let recordingTarget = null;
 
   // ── Load Providers & Settings ───────────────────────────────────────────
 
@@ -35,7 +41,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     temperatureEl.value = currentSettings.temperature ?? 0.3;
     tempValueEl.textContent = temperatureEl.value;
     languageEl.value = currentSettings.responseLanguage || "auto";
-    shortcutSearchEl.value = currentSettings.shortcuts?.searchInPage || "Ctrl+Shift+F";
+    translateLanguageEl.value = currentSettings.translateLanguage || "auto";
+    shortcutSearchEl.value =
+      currentSettings.shortcuts?.searchInPage || "Ctrl+Shift+F";
+    shortcutTranslateEl.value =
+      currentSettings.shortcuts?.translatePage || "Ctrl+Shift+T";
 
     updateBaseUrlVisibility();
 
@@ -203,31 +213,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ── Shortcut Recording ──────────────────────────────────────────────────
 
   shortcutRecordBtn.addEventListener("click", () => {
-    if (isRecording) {
+    if (isRecording && recordingTarget === shortcutSearchEl) {
       stopRecording();
     } else {
-      startRecording();
+      startRecording(shortcutSearchEl);
     }
   });
 
-  function startRecording() {
+  shortcutRecordTranslateBtn.addEventListener("click", () => {
+    if (isRecording && recordingTarget === shortcutTranslateEl) {
+      stopRecording();
+    } else {
+      startRecording(shortcutTranslateEl);
+    }
+  });
+
+  function startRecording(targetEl) {
+    stopRecording();
     isRecording = true;
-    shortcutSearchEl.classList.add("recording");
-    shortcutSearchEl.value = "Press keys...";
-    shortcutSearchEl.focus();
+    recordingTarget = targetEl;
+    targetEl.classList.add("recording");
+    targetEl.value = "Press keys...";
+    targetEl.focus();
   }
 
   function stopRecording() {
     isRecording = false;
-    shortcutSearchEl.classList.remove("recording");
+    if (recordingTarget) {
+      recordingTarget.classList.remove("recording");
+      recordingTarget = null;
+    }
   }
 
-  shortcutSearchEl.addEventListener("keydown", (e) => {
-    if (!isRecording) return;
+  function handleShortcutKeydown(e) {
+    if (!isRecording || !recordingTarget) return;
     e.preventDefault();
     e.stopPropagation();
 
-    // Ignore modifier-only presses
     if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
 
     const parts = [];
@@ -236,9 +258,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.altKey) parts.push("Alt");
     parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
 
-    shortcutSearchEl.value = parts.join("+");
+    recordingTarget.value = parts.join("+");
     stopRecording();
-  });
+  }
+
+  shortcutSearchEl.addEventListener("keydown", handleShortcutKeydown);
+  shortcutTranslateEl.addEventListener("keydown", handleShortcutKeydown);
 
   // ── Manage Shortcuts Link ───────────────────────────────────────────────
 
@@ -258,8 +283,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       baseUrl: baseurlEl.value.trim(),
       temperature: parseFloat(temperatureEl.value),
       responseLanguage: languageEl.value,
+      translateLanguage: translateLanguageEl.value,
       shortcuts: {
         searchInPage: shortcutSearchEl.value || "Ctrl+Shift+F",
+        translatePage: shortcutTranslateEl.value || "Ctrl+Shift+T",
       },
     };
 
@@ -291,8 +318,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       baseUrl: baseurlEl.value.trim(),
       temperature: parseFloat(temperatureEl.value),
       responseLanguage: languageEl.value,
+      translateLanguage: translateLanguageEl.value,
       shortcuts: {
         searchInPage: shortcutSearchEl.value || "Ctrl+Shift+F",
+        translatePage: shortcutTranslateEl.value || "Ctrl+Shift+T",
       },
     };
 

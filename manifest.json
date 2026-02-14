@@ -27,6 +27,12 @@
       "js": ["content-search.js"],
       "css": ["content-search.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-translate.js"],
+      "css": ["content-translate.css"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -55,6 +61,13 @@
         "mac": "MacCtrl+Shift+F"
       },
       "description": "Search in page with AI"
+    },
+    "toggle-translate": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+T",
+        "mac": "MacCtrl+Shift+T"
+      },
+      "description": "Translate page"
     }
   },
   "icons": {

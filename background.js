@@ -9,8 +9,10 @@ const DEFAULT_SETTINGS = {
   baseUrl: "",
   temperature: 0.3,
   responseLanguage: "auto",
+  translateLanguage: "auto",
   shortcuts: {
     searchInPage: "Ctrl+Shift+F",
+    translatePage: "Ctrl+Shift+T",
   },
 };
 
@@ -165,6 +167,15 @@ function buildSummaryPrompt(page) {
   return `URL: ${page.url}\nTitle: ${page.title}\nContent: ${page.text}`;
 }
 
+const TRANSLATE_SYSTEM = `You are a professional translator. You will receive text segments separated by "|||SPLIT|||".
+Translate EACH segment to the target language, keeping the same separator "|||SPLIT|||" between translated segments.
+Rules:
+- Preserve the EXACT number of segments — do NOT merge or split them
+- Keep proper nouns, brand names, URLs, code, and numbers unchanged
+- Maintain the original tone and style
+- Output ONLY the translated segments separated by |||SPLIT|||, nothing else
+- Do NOT add any explanation, numbering, or extra text`;
+
 function buildQuestionPrompt(page, question) {
   return `Page URL: ${page.url}\nPage Title: ${page.title}\nPage Content: ${page.text}\n\nUser Question: ${question}`;
 }
@@ -179,6 +190,8 @@ browser.runtime.onMessage.addListener((msg, _sender) => {
       return handleSummarize(msg.data);
     case "askPageQuestion":
       return handleAskPageQuestion(msg.data);
+    case "translateText":
+      return handleTranslate(msg.data);
     case "getSettings":
       return getSettings();
     case "saveSettings":
@@ -283,7 +296,11 @@ async function handleAskPageQuestion(data) {
   const { url, title, text, question } = data;
   if (!question) throw new Error("No question provided");
 
-  const page = { url: url || "", title: title || "", text: (text || "").slice(0, 8000) };
+  const page = {
+    url: url || "",
+    title: title || "",
+    text: (text || "").slice(0, 8000),
+  };
   const settings = await getSettings();
   const langInstruction = getLanguageInstruction(settings);
   const answer = await aiComplete(
@@ -293,6 +310,20 @@ async function handleAskPageQuestion(data) {
   );
 
   return { answer };
+}
+
+async function handleTranslate(data) {
+  const { text, targetLang, separator } = data;
+  if (!text || !targetLang) throw new Error("Missing translate parameters");
+
+  const settings = await getSettings();
+  const result = await aiComplete(
+    settings,
+    TRANSLATE_SYSTEM,
+    `Target language: ${targetLang}\n\nText to translate:\n${text}`,
+  );
+
+  return result;
 }
 
 async function handleTestConnection() {
@@ -318,5 +349,7 @@ browser.commands.onCommand.addListener(async (command) => {
     browser.tabs.sendMessage(tab.id, { action: "triggerSummary" });
   } else if (command === "toggle-search") {
     browser.tabs.sendMessage(tab.id, { action: "triggerSearch" });
+  } else if (command === "toggle-translate") {
+    browser.tabs.sendMessage(tab.id, { action: "triggerTranslate" });
   }
 });

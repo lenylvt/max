@@ -36,7 +36,18 @@
         <!-- Provider Section -->
         <section class="section">
           <div class="section-label">
-            <svg class="section-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l6-3 6 3v8l-6 3-6-3V4z"/><path d="M2 4l6 3 6-3M8 7v8"/></svg>
+            <svg
+              class="section-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M2 4l6-3 6 3v8l-6 3-6-3V4z" />
+              <path d="M2 4l6 3 6-3M8 7v8" />
+            </svg>
             Provider
           </div>
           <div class="section-card">
@@ -98,7 +109,18 @@
         <!-- Model Section -->
         <section class="section">
           <div class="section-label">
-            <svg class="section-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+            <svg
+              class="section-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="8" cy="8" r="6" />
+              <path d="M8 5v3l2 2" />
+            </svg>
             Model
           </div>
           <div class="section-card">
@@ -164,7 +186,18 @@
         <!-- Shortcuts Section -->
         <section class="section">
           <div class="section-label">
-            <svg class="section-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="14" height="8" rx="2"/><path d="M4 8h1M7 8h2M11 8h1M5 11h6"/></svg>
+            <svg
+              class="section-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="1" y="5" width="14" height="8" rx="2" />
+              <path d="M4 8h1M7 8h2M11 8h1M5 11h6" />
+            </svg>
             Shortcuts
           </div>
           <div class="section-card">
@@ -186,14 +219,75 @@
                   readonly
                   placeholder="Click and press keys..."
                 />
-                <button type="button" id="shortcut-record" class="btn-icon" title="Record shortcut">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
+                <button
+                  type="button"
+                  id="shortcut-record"
+                  class="btn-icon"
+                  title="Record shortcut"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="8" cy="8" r="6" />
+                    <circle cx="8" cy="8" r="2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="shortcut-translate">Translate Page</label>
+              <div class="shortcut-capture-row">
+                <input
+                  type="text"
+                  id="shortcut-translate"
+                  class="shortcut-input"
+                  value="Ctrl+Shift+T"
+                  readonly
+                  placeholder="Click and press keys..."
+                />
+                <button
+                  type="button"
+                  id="shortcut-record-translate"
+                  class="btn-icon"
+                  title="Record shortcut"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="8" cy="8" r="6" />
+                    <circle cx="8" cy="8" r="2" fill="currentColor" />
+                  </svg>
                 </button>
               </div>
             </div>
             <div class="field field-note">
               <a href="#" id="manage-shortcuts-link" class="manage-link">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6 5-6 5"/></svg>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 3l6 5-6 5" />
+                </svg>
                 Manage all shortcuts in Firefox settings
               </a>
             </div>
@@ -203,7 +297,20 @@
         <!-- Preferences Section -->
         <section class="section">
           <div class="section-label">
-            <svg class="section-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1-1.5 2.6-1.5-.6a5.5 5.5 0 01-1.5.9L9.5 15h-3l-.5-1.3a5.5 5.5 0 01-1.5-.9l-1.5.6L1.5 10.8l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1 1.5-2.6 1.5.6A5.5 5.5 0 016 2.3L6.5 1h3l.5 1.3c.6.2 1.1.5 1.5.9l1.5-.6 1.5 2.6-1.3 1c.2.6.3 1.2.3 1.8z"/></svg>
+            <svg
+              class="section-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="8" cy="8" r="2.5" />
+              <path
+                d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1-1.5 2.6-1.5-.6a5.5 5.5 0 01-1.5.9L9.5 15h-3l-.5-1.3a5.5 5.5 0 01-1.5-.9l-1.5.6L1.5 10.8l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1 1.5-2.6 1.5.6A5.5 5.5 0 016 2.3L6.5 1h3l.5 1.3c.6.2 1.1.5 1.5.9l1.5-.6 1.5 2.6-1.3 1c.2.6.3 1.2.3 1.8z"
+              />
+            </svg>
             Preferences
           </div>
           <div class="section-card">
@@ -222,6 +329,29 @@
                 <option value="Korean">Korean</option>
                 <option value="Arabic">Arabic</option>
                 <option value="Russian">Russian</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="translate-language">Translate Page To</label>
+              <select id="translate-language">
+                <option value="auto">Same as response language</option>
+                <option value="English">English</option>
+                <option value="French">French</option>
+                <option value="Spanish">Spanish</option>
+                <option value="German">German</option>
+                <option value="Italian">Italian</option>
+                <option value="Portuguese">Portuguese</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Korean">Korean</option>
+                <option value="Arabic">Arabic</option>
+                <option value="Russian">Russian</option>
+                <option value="Dutch">Dutch</option>
+                <option value="Polish">Polish</option>
+                <option value="Turkish">Turkish</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Ukrainian">Ukrainian</option>
+                <option value="Swedish">Swedish</option>
               </select>
             </div>
           </div>

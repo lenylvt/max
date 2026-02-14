@@ -52,6 +52,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Translate button
+  const translateBtn = document.getElementById("translate-btn");
+  translateBtn.addEventListener("click", async () => {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tab?.id) {
+      await browser.tabs.sendMessage(tab.id, { action: "triggerTranslate" });
+      window.close();
+    }
+  });
+
   // Settings button
   settingsLink.addEventListener("click", (e) => {
     e.preventDefault();
