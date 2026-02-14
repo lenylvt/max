@@ -125,33 +125,25 @@ const PREVIEW_SYSTEM = `You are a concise summarizer. Given a web page's content
 - "description": Only one full sentences describing what the page is about, covering the main points, key details, and context.
 Output ONLY valid JSON, no markdown fences, no extra text.`;
 
-const SUMMARY_SYSTEM = `You are an expert page summarizer producing Notion-style documents. Produce a well-structured Markdown summary following this exact format:
+const SUMMARY_SYSTEM = `You are an expert page analyzer. Given a web page's content, produce a JSON object with these fields:
 
-# [emoji] Title of the page
-*A key question or subtitle about the content*
+- "title": short catchy title (max 8 words)
+- "subtitle": the full page title or a descriptive tagline
+- "summary": 2-4 sentence summary of the page
+- "sections": an array of contextual info sections relevant to this page type. Pick ONLY sections that make sense for the content. Each section has:
+  - "icon": one of: star, price, list, thumbsup, thumbsdown, info, clock, location, warning, check
+  - "label": short header (1-3 words)
+  - "content": string value (for single-value info like price, rating)
+  - "items": array of strings (for lists like features, pros, cons) — use EITHER content OR items, not both
 
-[Introductory paragraph with **bold** on key terms.]
+Examples of adaptive sections:
+- Product page: Price, Rating, Key Features, Pros/Cons
+- Blog/article: Key Points, Takeaways, Topics Covered
+- Restaurant: Price Range, Location, Hours, Rating
+- News: Key Facts, Timeline, Sources
+- Documentation: Overview, Prerequisites, Key Concepts
 
----
-
-## [emoji] Key Findings / Main Points
-Detailed content for this section with clear explanations...
-
-## [emoji] Analysis / How It Works
-More detailed content...
-
-## [emoji] Implications / What This Means
-Content about broader impact or takeaways...
-
----
-
-Guidelines:
-- 500-700 words total for thorough coverage
-- Use descriptive section headers with emojis
-- Bold important terms and key phrases
-- Include 3-5 well-developed sub-sections
-- Write in clear, engaging prose — not bullet-point lists
-- Each section should have 2-3 substantial paragraphs`;
+Include 2-6 sections. Output ONLY valid JSON, no markdown fences, no extra text.`;
 
 const QUESTION_SYSTEM = `You are an expert assistant that answers questions about web page content. Given the page content and a user question:
 - Answer directly and concisely based on the page content
@@ -282,15 +274,35 @@ async function handleSummarize(data) {
 
     const settings = await getSettings();
     const langInstruction = getLanguageInstruction(settings);
-    const markdown = await aiComplete(
-      settings,
-      SUMMARY_SYSTEM + langInstruction,
-      buildSummaryPrompt(page),
-    );
+    let parsed;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const raw = await aiComplete(
+        settings,
+        SUMMARY_SYSTEM + langInstruction,
+        buildSummaryPrompt(page),
+      );
+
+      try {
+        const cleaned = raw
+          .replace(/```json\s*/g, "")
+          .replace(/```\s*/g, "")
+          .trim();
+        parsed = JSON.parse(cleaned);
+        break;
+      } catch {
+        if (attempt === 1) {
+          parsed = {
+            title: page.title || "",
+            subtitle: "",
+            summary: raw.slice(0, 500),
+            sections: [],
+          };
+        }
+      }
+    }
 
     const result = {
-      markdown,
-      title: page.title,
+      ...parsed,
       ogImage: page.ogImage,
       url: page.url,
       domain: new URL(url).hostname,

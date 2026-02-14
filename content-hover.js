@@ -160,7 +160,7 @@
     );
   }
 
-  const HOVER_DELAY = isSearchEngine ? 600 : 800;
+  const HOVER_DELAY = 1000;
 
   // Don't show preview while user is selecting text
   function hasActiveSelection() {
