@@ -1,35 +1,35 @@
-import Link from "next/link";
-
 export function Hero() {
   return (
-    <section className="px-6 pt-24 pb-16 text-center">
-      <div className="mx-auto max-w-3xl animate-in">
-        <div className="mb-6 inline-block rounded-[var(--radius-full)] border border-[var(--border)] bg-[var(--brand-light)] px-4 py-1.5 text-sm font-medium text-[var(--brand-text)]">
-          Free &mdash; 10 AI requests/day
-        </div>
-        <h1 className="text-5xl font-bold tracking-tight text-[var(--text-primary)] sm:text-6xl">
-          AI-powered browsing
+    <section className="relative px-6 flex items-center justify-center min-h-[calc(100svh-12rem)]">
+      <div className="mx-auto max-w-3xl text-center">
+        <h1
+          className="font-serif text-6xl tracking-tight text-[var(--text-primary)] sm:text-7xl lg:text-8xl animate-in"
+          style={{ fontStyle: "italic" }}
+        >
+          AI superpowers for
+          <br />
+          your browser.
         </h1>
-        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-[var(--text-secondary)]">
-          Get instant summaries, translations, and answers while you browse.
-          Hover any link for an AI preview. No API key needed.
+
+        <p className="mx-auto mt-6 max-w-xl text-base text-[var(--text-secondary)] sm:text-lg animate-in-delay-1">
+          Summarize pages, preview links, translate, search & ask
+          <br />— all without leaving the tab.
         </p>
-        <div className="mt-10 flex items-center justify-center gap-4">
+
+        <div className="mt-10 flex items-center justify-center gap-3 animate-in-delay-2">
           <a
             href="https://addons.mozilla.org/firefox/addon/getmax/"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-[var(--radius-sm)] bg-[var(--text-primary)] px-6 py-3 text-sm font-semibold text-[var(--surface)] shadow-[var(--shadow-sm)] transition hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-7 py-3 text-sm font-medium text-white hover:opacity-90"
           >
             Install for Firefox
           </a>
-          <Link
-            href="/sign-up"
-            className="rounded-[var(--radius-sm)] border border-[var(--border)] px-6 py-3 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
-          >
-            Get started
-          </Link>
         </div>
+
+        <p className="mt-4 text-sm text-[var(--text-muted)] animate-in-delay-3">
+          Free to use &middot; No API key needed
+        </p>
       </div>
     </section>
   );
