@@ -2,6 +2,20 @@ export function Hero() {
   return (
     <section className="relative px-6 flex items-center justify-center min-h-[calc(100svh-12rem)]">
       <div className="mx-auto max-w-3xl text-center">
+        <div className="mb-8 flex justify-center animate-in">
+          <a
+            href="https://www.producthunt.com/products/max-5?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-max-5"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              alt="Max - Use your browser more that you expect (Arc Max like feature) | Product Hunt"
+              width="250"
+              height="54"
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1079992&theme=light&t=1771278641184"
+            />
+          </a>
+        </div>
         <h1
           className="font-serif text-6xl tracking-tight text-[var(--text-primary)] sm:text-7xl lg:text-8xl animate-in"
           style={{ fontStyle: "italic" }}

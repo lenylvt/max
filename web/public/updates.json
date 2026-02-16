@@ -1,9 +1,9 @@
 {
   "addons": {
-    "max@leny.levant95.icloud.com": {
+    "maxdiff@leny.levant95.icloud.com": {
       "updates": [
         {
-          "version": "1.1.0",
+          "version": "1.1.1",
           "update_link": "https://max.lenylvt.cc/max.xpi",
           "applications": {
             "gecko": {
