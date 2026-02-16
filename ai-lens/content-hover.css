@@ -1,0 +1,131 @@
+/* ── Max Preview Card (search + hyperlink) ────────────────────────────────── */
+
+.ailens-preview-card {
+  position: absolute;
+  z-index: 2147483647;
+  width: 380px;
+  max-width: 90vw;
+  max-height: 400px;
+  background: var(--ailens-bg);
+  border-radius: var(--ailens-radius-md);
+  box-shadow: var(--ailens-shadow-sm);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ailens-text-primary);
+  border: 1px solid var(--ailens-border);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  transition:
+    opacity var(--ailens-duration-normal) var(--ailens-ease),
+    transform var(--ailens-duration-normal) var(--ailens-ease);
+  pointer-events: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ailens-preview-card::-webkit-scrollbar {
+  display: none;
+}
+
+.ailens-preview-card.ailens-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  will-change: opacity, transform;
+}
+
+/* ── Card Curtain Animation (when content loaded) ────────────────────────── */
+
+.ailens-preview-card.ailens-loading {
+  clip-path: inset(0 0 0 0);
+  box-shadow: none;
+}
+
+.ailens-preview-card.ailens-loaded {
+  animation: ailens-curtain-reveal var(--ailens-duration-slow) var(--ailens-ease) forwards;
+  will-change: clip-path, box-shadow;
+}
+
+/* ── Card Content ────────────────────────────────────────────────────────── */
+
+.ailens-preview-og {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
+}
+
+.ailens-preview-body {
+  padding: 16px 20px 18px;
+}
+
+.ailens-preview-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ailens-text-primary);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ailens-preview-desc {
+  font-size: 13px;
+  color: var(--ailens-text-secondary);
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.ailens-preview-domain {
+  font-size: 11px;
+  color: var(--ailens-text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ailens-preview-domain img {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--ailens-radius-xs);
+  opacity: 0.8;
+}
+
+/* ── Loading shimmer ─────────────────────────────────────────────────────── */
+
+.ailens-preview-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+}
+
+/* Uses .ailens-shimmer from content-common.css */
+.ailens-preview-shimmer {
+  display: block;
+  height: 12px;
+  width: 100%;
+}
+
+/* ── Error & Rate Limit ──────────────────────────────────────────────────── */
+
+.ailens-preview-error {
+  color: var(--ailens-text-tertiary);
+  font-size: 12px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+/* Uses .ailens-ratelimit* from content-common.css */
+
+/* ── Dark Mode ───────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  /* Most styles use CSS variables and adapt automatically */
+}

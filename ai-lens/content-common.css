@@ -1,0 +1,278 @@
+/* ── AI Lens — Shared Styles ────────────────────────────────────────────── */
+
+/* ── CSS Variables ──────────────────────────────────────────────────────── */
+
+:root {
+  /* Shadows */
+  --ailens-shadow-sm: 0 4px 24px rgba(0, 0, 0, 0.1),
+    0 1.5px 6px rgba(0, 0, 0, 0.06);
+  --ailens-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Timing & Easing - UI/UX FIX: Unified animation variables */
+  --ailens-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ailens-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ailens-duration-fast: 0.15s;
+  --ailens-duration-normal: 0.2s;
+  --ailens-duration-slow: 0.35s;
+
+  /* Border Radius - UI/UX FIX: Standardized scale (was 15 values, now 5) */
+  --ailens-radius-xs: 4px;
+  --ailens-radius-sm: 8px;
+  --ailens-radius-md: 12px;
+  --ailens-radius-lg: 20px;
+  --ailens-radius-full: 999px;
+
+  /* Colors - UI/UX FIX: Unified color system */
+  --ailens-bg: #fff;
+  --ailens-border: rgba(0, 0, 0, 0.06);
+  --ailens-text-primary: #1a1a2e;
+  --ailens-text-secondary: #6b6b68;
+  --ailens-text-tertiary: #9b9a97;
+  --ailens-shimmer-from: #f0f0ec;
+  --ailens-shimmer-to: #e8e8e4;
+
+  /* UI/UX FIX: Unified semantic colors (replaces 5 greens, 2 reds, 2 violets) */
+  --ailens-error: #dc2626;
+  --ailens-error-light: #fca5a5;
+  --ailens-success: #16a34a;
+  --ailens-success-light: #86efac;
+  --ailens-brand: #6366f1;
+  --ailens-brand-dark: #4f46e5;
+
+  /* UI/UX FIX: Focus state for accessibility */
+  --ailens-focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  --ailens-focus-ring-error: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ailens-shadow-sm: 0 4px 24px rgba(0, 0, 0, 0.35),
+      0 1.5px 6px rgba(0, 0, 0, 0.18);
+    --ailens-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4),
+      0 2px 8px rgba(0, 0, 0, 0.2);
+
+    --ailens-bg: #1e1e2e;
+    --ailens-border: rgba(255, 255, 255, 0.08);
+    --ailens-text-primary: #e0e0f0;
+    --ailens-text-secondary: #9b9a97;
+    --ailens-text-tertiary: #6b6b78;
+    --ailens-shimmer-from: #2a2a3e;
+    --ailens-shimmer-to: #333348;
+
+    /* UI/UX FIX: Dark mode semantic colors */
+    --ailens-error: #fca5a5;
+    --ailens-error-light: #fecaca;
+    --ailens-success: #86efac;
+    --ailens-success-light: #bbf7d0;
+    --ailens-brand: #818cf8;
+    --ailens-brand-dark: #6366f1;
+
+    --ailens-focus-ring: 0 0 0 3px rgba(129, 140, 248, 0.3);
+    --ailens-focus-ring-error: 0 0 0 3px rgba(252, 165, 165, 0.3);
+  }
+}
+
+/* ── Shared Animations ──────────────────────────────────────────────────── */
+
+@keyframes ailens-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ailens-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ailens-curtain-reveal {
+  0% {
+    clip-path: inset(0 0 100% 0 round 14px);
+    opacity: 0;
+  }
+  100% {
+    clip-path: inset(0 0 0 0 round 14px);
+    opacity: 1;
+  }
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+
+.ailens-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ailens-shimmer-from);
+  border-top-color: var(--ailens-text-primary);
+  border-radius: 50%;
+  animation: ailens-spin 0.7s cubic-bezier(0.4, 0.15, 0.6, 0.85) infinite;
+  flex-shrink: 0;
+}
+
+/* ── Loading State ──────────────────────────────────────────────────────── */
+
+.ailens-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ailens-text-tertiary);
+}
+
+/* ── Shimmer ────────────────────────────────────────────────────────────── */
+
+.ailens-shimmer {
+  border-radius: var(--ailens-radius-sm); /* UI/UX FIX: Use variable */
+  background: linear-gradient(
+    90deg,
+    var(--ailens-shimmer-from) 25%,
+    var(--ailens-shimmer-to) 50%,
+    var(--ailens-shimmer-from) 75%
+  );
+  background-size: 200% 100%;
+  animation: ailens-shimmer 1.4s ease infinite;
+}
+
+/* ── Rate Limit ──────────────────────────────────────────────────────────── */
+
+.ailens-ratelimit {
+  text-align: center;
+  padding: 24px 20px;
+}
+
+.ailens-ratelimit-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ailens-text-primary);
+  margin: 0 0 4px;
+}
+
+.ailens-ratelimit-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0 0 12px;
+}
+
+.ailens-ratelimit-btn {
+  display: inline-block;
+  padding: 7px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff !important;
+  background: var(--ailens-brand); /* UI/UX FIX: Use brand variable */
+  border-radius: var(--ailens-radius-full); /* UI/UX FIX: Use variable */
+  text-decoration: none !important;
+  transition: background var(--ailens-duration-fast);
+  outline: none;
+}
+
+.ailens-ratelimit-btn:hover {
+  background: var(--ailens-brand-dark); /* UI/UX FIX: Use brand-dark variable */
+}
+
+/* UI/UX FIX: Accessibility - focus states */
+.ailens-ratelimit-btn:focus-visible {
+  box-shadow: var(--ailens-focus-ring);
+}
+
+/* ── Error State ─────────────────────────────────────────────────────────── */
+
+.ailens-error {
+  font-size: 13px;
+  color: var(--ailens-error);
+}
+
+/* ── Answer/Content Markdown Styles ─────────────────────────────────────── */
+
+.ailens-content {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ailens-text-primary);
+  overflow-wrap: break-word;
+}
+
+.ailens-content p {
+  margin: 0 0 10px;
+}
+
+.ailens-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ailens-content strong,
+.ailens-content b {
+  font-weight: 600;
+}
+
+.ailens-content em,
+.ailens-content i {
+  font-style: italic;
+  color: var(--ailens-text-secondary);
+}
+
+.ailens-content code {
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: var(--ailens-shimmer-from);
+  padding: 2px 5px;
+  border-radius: var(--ailens-radius-xs); /* UI/UX FIX: Use variable */
+  overflow-wrap: break-word;
+}
+
+.ailens-content pre {
+  overflow-x: auto;
+}
+
+.ailens-content ul,
+.ailens-content ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.ailens-content li {
+  margin-bottom: 4px;
+}
+
+.ailens-content a {
+  color: var(--ailens-text-primary);
+  text-decoration: underline;
+  text-decoration-color: #c4c4c0;
+}
+
+.ailens-content h1,
+.ailens-content h2,
+.ailens-content h3,
+.ailens-content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+
+.ailens-content h1:first-child,
+.ailens-content h2:first-child,
+.ailens-content h3:first-child {
+  margin-top: 0;
+}
+
+.ailens-content blockquote {
+  margin: 8px 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--ailens-border);
+  color: var(--ailens-text-secondary);
+}
+
+.ailens-content hr {
+  border: none;
+  border-top: 1px solid var(--ailens-border);
+  margin: 10px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ailens-content a {
+    text-decoration-color: #4a4a4a;
+  }
+}

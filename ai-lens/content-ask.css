@@ -1,0 +1,188 @@
+/* ── Ask Panel ───────────────────────────────────────────────────────────── */
+
+.ailens-ask-panel {
+  position: absolute;
+  z-index: 2147483647;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  transition: opacity var(--ailens-duration-normal) var(--ailens-ease),
+    transform var(--ailens-duration-normal) var(--ailens-ease);
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.ailens-ask-panel-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  will-change: opacity, transform;
+}
+
+/* ── Input ───────────────────────────────────────────────────────────────── */
+
+.ailens-ask-panel-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 16px;
+  width: 100%;
+  background: var(--ailens-bg);
+  border: 1px solid var(--ailens-border);
+  border-radius: var(--ailens-radius-full);
+  box-shadow: var(--ailens-shadow-sm);
+  box-sizing: border-box;
+  transition: transform var(--ailens-duration-fast) var(--ailens-ease),
+    box-shadow var(--ailens-duration-fast) var(--ailens-ease);
+}
+
+.ailens-ask-panel-input-wrap:focus-within {
+  transform: scale(1.01);
+  box-shadow: var(--ailens-shadow-md);
+}
+
+.ailens-ask-panel-input {
+  flex: 1;
+  min-width: 0;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  background: transparent !important;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ailens-text-primary);
+  padding: 6px 0;
+}
+
+.ailens-ask-panel-input::placeholder {
+  color: var(--ailens-text-tertiary);
+}
+
+.ailens-ask-panel-input:focus-visible {
+  outline: none;
+}
+
+.ailens-ask-panel-submit {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #111;
+  color: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ailens-duration-fast) var(--ailens-ease),
+    transform var(--ailens-duration-fast) var(--ailens-ease);
+}
+
+.ailens-ask-panel-submit:hover {
+  background: #2a2a2a;
+  transform: scale(1.05);
+}
+
+.ailens-ask-panel-submit:active {
+  transform: scale(0.95);
+}
+
+.ailens-ask-panel-submit:focus-visible {
+  outline: none;
+  box-shadow: var(--ailens-focus-ring);
+}
+
+/* ── Answer ──────────────────────────────────────────────────────────────── */
+
+.ailens-ask-panel-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--ailens-duration-slow) var(--ailens-ease);
+  margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ailens-ask-panel-answer-visible {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: var(--ailens-bg);
+  border-radius: var(--ailens-radius-lg);
+  box-shadow: var(--ailens-shadow-sm);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  animation: ailens-ask-answer-fade-in var(--ailens-duration-normal) var(--ailens-ease) forwards;
+}
+
+.ailens-ask-panel-answer-visible::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes ailens-ask-answer-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Uses .ailens-content from content-common.css */
+.ailens-ask-answer-content {
+  /* Inherits all styles from .ailens-content */
+}
+
+/* ── Loading & Error ─────────────────────────────────────────────────────── */
+
+/* Uses .ailens-loading from content-common.css */
+.ailens-ask-loading {
+  /* Inherits from .ailens-loading */
+}
+
+/* Uses .ailens-spinner from content-common.css */
+.ailens-ask-spinner {
+  /* Inherits from .ailens-spinner */
+}
+
+/* Uses .ailens-error from content-common.css */
+.ailens-ask-answer-error {
+  /* Inherits from .ailens-error */
+}
+
+/* Uses .ailens-ratelimit* from content-common.css */
+.ailens-ratelimit {
+  padding: 16px 12px;
+}
+
+/* ── Selection Highlight ─────────────────────────────────────────────────── */
+
+.ailens-ask-selection-highlight {
+  background: rgba(0, 120, 215, 0.25);
+  color: inherit;
+  border-radius: 1px;
+  transition: background var(--ailens-duration-normal) var(--ailens-ease);
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  .ailens-ask-panel-submit {
+    background: #fff;
+    color: #111;
+  }
+
+  .ailens-ask-panel-submit:hover {
+    background: #e8e8e8;
+    transform: scale(1.05);
+  }
+
+  .ailens-ask-selection-highlight {
+    background: rgba(55, 148, 255, 0.35);
+  }
+}

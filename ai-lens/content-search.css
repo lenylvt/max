@@ -1,0 +1,282 @@
+/* ── Search Bar ──────────────────────────────────────────────────────────── */
+
+.ailens-search-bar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  transition: opacity var(--ailens-duration-normal) var(--ailens-ease),
+    transform var(--ailens-duration-normal) var(--ailens-ease);
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.ailens-search-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  will-change: opacity, transform;
+}
+
+/* ── Inner ───────────────────────────────────────────────────────────────── */
+
+.ailens-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 340px;
+  max-width: calc(100vw - 40px);
+  padding: 5px 10px;
+  background: var(--ailens-bg);
+  border: 1px solid var(--ailens-border);
+  border-radius: var(--ailens-radius-md);
+  box-shadow: var(--ailens-shadow-sm);
+  box-sizing: border-box;
+  transition: transform var(--ailens-duration-fast) var(--ailens-ease),
+    box-shadow var(--ailens-duration-fast) var(--ailens-ease);
+}
+
+.ailens-search-inner:focus-within {
+  transform: scale(1.01);
+  box-shadow: var(--ailens-shadow-md);
+}
+
+.ailens-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ailens-search-icon {
+  display: none;
+}
+
+.ailens-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  background: transparent !important;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ailens-text-primary);
+  padding: 5px 0;
+}
+
+.ailens-search-input::placeholder {
+  color: var(--ailens-text-tertiary);
+}
+
+.ailens-search-input:focus-visible {
+  outline: none;
+}
+
+.ailens-search-count {
+  font-size: 10.5px;
+  color: var(--ailens-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+
+.ailens-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.ailens-search-nav {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: var(--ailens-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ailens-text-secondary);
+  transition: background var(--ailens-duration-fast) var(--ailens-ease),
+    color var(--ailens-duration-fast) var(--ailens-ease),
+    transform var(--ailens-duration-fast) var(--ailens-ease);
+}
+
+.ailens-search-nav svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ailens-search-nav:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ailens-text-primary);
+  transform: scale(1.08);
+}
+
+.ailens-search-nav:active {
+  transform: scale(0.95);
+}
+
+.ailens-search-nav:focus-visible {
+  outline: none;
+  box-shadow: var(--ailens-focus-ring);
+}
+
+.ailens-search-ask {
+  padding: 4px 10px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 550;
+  font-family: inherit;
+  border-radius: var(--ailens-radius-sm);
+  cursor: pointer;
+  transition: background var(--ailens-duration-fast) var(--ailens-ease),
+    transform var(--ailens-duration-fast) var(--ailens-ease);
+  white-space: nowrap;
+  margin: 0 2px;
+}
+
+.ailens-search-ask:hover {
+  background: #2a2a2a;
+  transform: scale(1.03);
+}
+
+.ailens-search-ask:active {
+  transform: scale(0.97);
+}
+
+.ailens-search-ask:focus-visible {
+  outline: none;
+  box-shadow: var(--ailens-focus-ring);
+}
+
+.ailens-search-close {
+  display: none;
+}
+
+/* ── Answer ──────────────────────────────────────────────────────────────── */
+
+.ailens-search-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--ailens-duration-slow) var(--ailens-ease);
+  margin-top: 0;
+}
+
+.ailens-search-answer-visible {
+  max-height: 340px;
+  width: 340px;
+  max-width: calc(100vw - 40px);
+  overflow-y: auto;
+  margin-top: 6px;
+  padding: 14px 16px;
+  background: var(--ailens-bg);
+  border-radius: var(--ailens-radius-md);
+  box-shadow: var(--ailens-shadow-sm);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  box-sizing: border-box;
+  animation: ailens-search-answer-fade-in var(--ailens-duration-normal) var(--ailens-ease) forwards;
+}
+
+.ailens-search-answer-visible::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes ailens-search-answer-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Uses .ailens-content from content-common.css */
+.ailens-search-answer-content {
+  /* Inherits all styles from .ailens-content */
+}
+
+/* ── Loading & Error ─────────────────────────────────────────────────────── */
+
+/* Uses .ailens-loading from content-common.css */
+.ailens-search-answer-loading {
+  /* Inherits from .ailens-loading */
+}
+
+/* Uses .ailens-spinner from content-common.css */
+.ailens-search-spinner {
+  /* Inherits from .ailens-spinner */
+}
+
+/* Uses .ailens-error from content-common.css */
+.ailens-search-answer-error {
+  /* Inherits from .ailens-error */
+}
+
+/* Uses .ailens-ratelimit* from content-common.css */
+.ailens-ratelimit {
+  padding: 16px 12px;
+}
+
+/* ── Highlights ──────────────────────────────────────────────────────────── */
+
+.ailens-search-highlight {
+  background: #fef08a;
+  color: inherit;
+  border-radius: var(--ailens-radius-xs);
+  padding: 1px 0;
+  box-shadow: 0 0 0 1px #fef08a;
+  transition: background var(--ailens-duration-normal) var(--ailens-ease),
+    color var(--ailens-duration-normal) var(--ailens-ease),
+    box-shadow var(--ailens-duration-normal) var(--ailens-ease);
+}
+
+.ailens-search-highlight-active {
+  background: #fb923c;
+  color: #fff;
+  box-shadow: 0 0 0 2px #fb923c;
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  .ailens-search-nav:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: scale(1.08);
+  }
+
+  .ailens-search-ask {
+    background: #fff;
+    color: #111;
+  }
+
+  .ailens-search-ask:hover {
+    background: #e8e8e8;
+    transform: scale(1.03);
+  }
+
+  .ailens-search-highlight {
+    background: #854d0e;
+    color: #fef9c3;
+    box-shadow: 0 0 0 1px #854d0e;
+  }
+
+  .ailens-search-highlight-active {
+    background: #ea580c;
+    color: #fff;
+    box-shadow: 0 0 0 2px #ea580c;
+  }
+}

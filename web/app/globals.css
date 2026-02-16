@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/* ── Design tokens aligned with extension (warm Notion-like palette) ───── */
+
+:root {
+  /* Core backgrounds */
+  --background: #fbfbfa;
+  --surface: #fff;
+  --surface-hover: #f7f6f3;
+  --surface-active: #eeede8;
+
+  /* Text hierarchy */
+  --text-primary: #37352f;
+  --text-secondary: #6b6b68;
+  --text-tertiary: #9b9a97;
+  --text-muted: #c4c4c0;
+
+  /* Borders */
+  --border: #e8e8e4;
+  --border-light: #f0f0ec;
+
+  /* Brand (indigo, matching extension --ailens-brand) */
+  --brand: #6366f1;
+  --brand-hover: #4f46e5;
+  --brand-light: #eef2ff;
+  --brand-text: #4338ca;
+
+  /* Semantic */
+  --success: #16a34a;
+  --success-light: #f0faf4;
+  --error: #dc2626;
+  --error-light: #fef2f2;
+  --warning: #f59e0b;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1.5px 6px rgba(0, 0, 0, 0.04);
+
+  /* Radius (matching extension scale) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* Timing */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.2s;
+
+  /* Focus */
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.2);
+
+  /* Font */
+  --foreground: var(--text-primary);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111;
+    --surface: #191919;
+    --surface-hover: #2f2f2f;
+    --surface-active: #3a3a3a;
+
+    --text-primary: #e0dfdb;
+    --text-secondary: #9b9a97;
+    --text-tertiary: #6b6b68;
+    --text-muted: #4a4a4a;
+
+    --border: #2f2f2f;
+    --border-light: #2a2a2a;
+
+    --brand: #818cf8;
+    --brand-hover: #6366f1;
+    --brand-light: rgba(99, 102, 241, 0.1);
+    --brand-text: #a5b4fc;
+
+    --success: #86efac;
+    --success-light: #0a2e1c;
+    --error: #fca5a5;
+    --error-light: #2e0a0a;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1.5px 6px rgba(0, 0, 0, 0.15);
+
+    --focus-ring: 0 0 0 3px rgba(129, 140, 248, 0.3);
+
+    --foreground: var(--text-primary);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ── Animations (matching extension patterns) ──────────────────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-in-delay-1 {
+  animation: fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s both;
+}
+
+.animate-in-delay-2 {
+  animation: fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+.animate-in-delay-3 {
+  animation: fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+}
+
+/* ── Skeleton shimmer ──────────────────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border-light) 25%,
+    var(--border) 50%,
+    var(--border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Focus states (matching extension pattern) ─────────────────────────── */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ── Clerk portal z-index fix ──────────────────────────────────────────── */
+/* Clerk UserButton popover + PricingTable checkout drawer must sit above
+   the fixed navbar (z-50). */
+.cl-modalBackdrop,
+.cl-modal,
+.cl-userButtonPopoverCard {
+  z-index: 100 !important;
+}

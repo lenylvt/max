@@ -1,0 +1,454 @@
+/* ── Max Summary — Card Overlay ──────────────────────────────────────────── */
+
+.ailens-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  background: rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ailens-duration-normal) var(--ailens-ease);
+  overflow: hidden;
+}
+
+.ailens-overlay.ailens-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Container ──────────────────────────────────────────────────────────── */
+
+.ailens-summary-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    sans-serif;
+  color: var(--ailens-text-primary);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  transition:
+    opacity var(--ailens-duration-slow) var(--ailens-ease) 0.05s,
+    transform var(--ailens-duration-slow) var(--ailens-ease) 0.05s;
+}
+
+.ailens-overlay.ailens-visible .ailens-summary-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  will-change: opacity, transform;
+}
+
+/* ── Close Button ───────────────────────────────────────────────────────── */
+
+.ailens-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--ailens-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ailens-text-secondary);
+  transition:
+    background var(--ailens-duration-fast),
+    color var(--ailens-duration-fast),
+    transform var(--ailens-duration-fast);
+  flex-shrink: 0;
+}
+
+.ailens-close-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ailens-close-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--ailens-text-primary);
+  transform: scale(1.05);
+}
+
+.ailens-close-btn:active {
+  transform: scale(0.95);
+}
+
+.ailens-close-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ailens-focus-ring);
+}
+
+/* ── Scrollable Content ─────────────────────────────────────────────────── */
+
+.ailens-summary-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 48px 24px 80px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ailens-summary-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+
+.ailens-summary-card {
+  position: relative;
+  width: 100%;
+  max-width: 550px;
+  background: var(--ailens-bg);
+  border-radius: var(--ailens-radius-lg);
+  padding: 32px;
+  box-shadow: var(--ailens-shadow-sm);
+  animation: ailens-fade-in var(--ailens-duration-slow) var(--ailens-ease);
+}
+
+/* ── Hero Image ─────────────────────────────────────────────────────────── */
+
+.ailens-card-hero {
+  margin: -32px -32px 24px;
+  border-radius: var(--ailens-radius-lg) var(--ailens-radius-lg) 0 0;
+  overflow: hidden;
+  border-bottom: 1px solid #e8e8e4;
+}
+
+.ailens-card-hero img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Source Line ─────────────────────────────────────────────────────────── */
+
+.ailens-card-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--ailens-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ailens-card-source img {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--ailens-radius-xs);
+  flex-shrink: 0;
+}
+
+/* ── Title & Subtitle ───────────────────────────────────────────────────── */
+
+.ailens-card-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1816;
+  margin: 0 0 6px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.ailens-card-subtitle {
+  font-size: 14px;
+  color: #8a857e;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* ── Summary ────────────────────────────────────────────────────────────── */
+
+.ailens-card-summary {
+  font-size: 15px;
+  color: #3d3832;
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+
+.ailens-card-divider {
+  height: 1px;
+  margin: 24px 0;
+  background: #e8e8e4;
+}
+
+/* ── Sections Grid ──────────────────────────────────────────────────────── */
+
+.ailens-card-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.ailens-card-section {
+  min-width: 0;
+}
+
+.ailens-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ailens-section-icon {
+  width: 18px;
+  height: 18px;
+  color: #6b6b68;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ailens-section-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ailens-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b6b68;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ailens-section-content {
+  font-size: 14px;
+  color: #2d2a26;
+  margin: 0;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.ailens-section-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ailens-section-list li {
+  font-size: 13.5px;
+  color: #3d3832;
+  line-height: 1.55;
+  padding: 2px 0;
+  padding-left: 14px;
+  position: relative;
+}
+
+.ailens-section-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c4c4c0;
+}
+
+/* ── Loading State — Shimmer ────────────────────────────────────────────── */
+
+.ailens-summary-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0;
+  width: 100%;
+}
+
+/* Uses .ailens-shimmer from content-common.css */
+.ailens-shimmer-block {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--ailens-radius-md);
+  margin-bottom: 8px;
+}
+
+.ailens-shimmer-line {
+  height: 14px;
+  border-radius: var(--ailens-radius-sm);
+}
+
+.ailens-shimmer-line.w100 {
+  width: 100%;
+}
+.ailens-shimmer-line.w90 {
+  width: 90%;
+}
+.ailens-shimmer-line.w70 {
+  width: 70%;
+}
+.ailens-shimmer-line.w60 {
+  width: 60%;
+  height: 22px;
+  border-radius: var(--ailens-radius-sm);
+}
+.ailens-shimmer-line.w40 {
+  width: 40%;
+}
+
+@keyframes ailens-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Error State ────────────────────────────────────────────────────────── */
+
+.ailens-summary-error {
+  text-align: center;
+  padding: 48px 24px;
+  color: #8a857e;
+  font-size: 15px;
+}
+
+.ailens-summary-error p {
+  margin: 8px 0;
+}
+
+.ailens-summary-error .ailens-error-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 12px;
+  color: #9b9a97;
+  opacity: 0.5;
+}
+
+.ailens-summary-error .ailens-error-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.ailens-summary-error .ailens-error-hint {
+  color: #b5b0a8;
+  font-size: 13px;
+}
+
+/* ── Rate Limit ──────────────────────────────────────────────────────────── */
+
+/* Uses .ailens-ratelimit* from content-common.css */
+.ailens-ratelimit {
+  padding: 40px 24px;
+}
+
+.ailens-ratelimit-title {
+  font-size: 17px;
+}
+
+.ailens-ratelimit-hint {
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+.ailens-ratelimit-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+}
+
+/* ── Dark Mode ──────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  .ailens-overlay {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .ailens-close-btn {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .ailens-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .ailens-card-hero {
+    border-bottom-color: #2f2f2f;
+  }
+
+  .ailens-card-title {
+    color: #f5f0ea;
+  }
+
+  .ailens-card-subtitle {
+    color: #8a857e;
+  }
+
+  .ailens-card-summary {
+    color: #ccc6bc;
+  }
+
+  .ailens-card-divider {
+    background: #2f2f2f;
+  }
+
+  .ailens-section-content {
+    color: #e0dbd4;
+  }
+
+  .ailens-section-list li {
+    color: #ccc6bc;
+  }
+
+  .ailens-section-list li::before {
+    background: #4a4a4a;
+  }
+
+  .ailens-summary-error {
+    color: #8a857e;
+  }
+
+  .ailens-summary-error .ailens-error-hint {
+    color: #5a554e;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 620px) {
+  .ailens-summary-card {
+    border-radius: var(--ailens-radius-md);
+    padding: 24px;
+  }
+
+  .ailens-card-hero {
+    margin: -24px -24px 20px;
+    border-radius: var(--ailens-radius-md) var(--ailens-radius-md) 0 0;
+  }
+
+  .ailens-card-hero img {
+    height: 180px;
+  }
+
+  .ailens-card-title {
+    font-size: 22px;
+  }
+
+  .ailens-card-sections {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
