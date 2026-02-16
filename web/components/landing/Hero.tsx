@@ -16,7 +16,7 @@ export function Hero() {
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
           <a
-            href="https://addons.mozilla.org/firefox/addon/max-ai/"
+            href="https://addons.mozilla.org/firefox/addon/getmax/"
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-[var(--radius-sm)] bg-[var(--text-primary)] px-6 py-3 text-sm font-semibold text-[var(--surface)] shadow-[var(--shadow-sm)] transition hover:opacity-90"

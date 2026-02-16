@@ -25,7 +25,7 @@ export default function Home() {
               Sign in
             </Link>
             <a
-              href="https://addons.mozilla.org/firefox/addon/max-ai/"
+              href="https://addons.mozilla.org/firefox/addon/getmax/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
