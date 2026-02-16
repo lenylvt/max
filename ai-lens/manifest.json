@@ -15,8 +15,24 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/utils.js", "lib/marked.min.js", "lib/DOMPurify.min.js", "content-hover.js", "content-summary.js", "content-search.js", "content-translate.js", "content-ask.js"],
-      "css": ["content-common.css", "content-hover.css", "content-summary.css", "content-search.css", "content-translate.css", "content-ask.css"],
+      "js": [
+        "lib/utils.js",
+        "lib/marked.min.js",
+        "lib/DOMPurify.min.js",
+        "content-hover.js",
+        "content-summary.js",
+        "content-search.js",
+        "content-translate.js",
+        "content-ask.js"
+      ],
+      "css": [
+        "content-common.css",
+        "content-hover.css",
+        "content-summary.css",
+        "content-search.css",
+        "content-translate.css",
+        "content-ask.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -56,6 +72,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "max@leny.levant95.icloud.com",
+      "update_url": "https://max.lenylvt.cc/updates.json",
       "strict_min_version": "142.0",
       "data_collection_permissions": {
         "required": ["websiteContent", "searchTerms", "browsingActivity"],

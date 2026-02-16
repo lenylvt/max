@@ -24,12 +24,7 @@ export default function Home() {
           <Link href="#pricing" className="hover:text-[var(--text-primary)]">
             Pricing
           </Link>
-          <a
-            href="https://addons.mozilla.org/firefox/addon/getmax/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--text-primary)]"
-          >
+          <a href="/max.xpi" className="hover:text-[var(--text-primary)]">
             Firefox Add-on
           </a>
           <Link href="/sign-in" className="hover:text-[var(--text-primary)]">

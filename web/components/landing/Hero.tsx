@@ -18,9 +18,7 @@ export function Hero() {
 
         <div className="mt-10 flex items-center justify-center gap-3 animate-in-delay-2">
           <a
-            href="https://addons.mozilla.org/firefox/addon/getmax/"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/max.xpi"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--text-primary)] px-7 py-3 text-sm font-medium text-white hover:opacity-90"
           >
             Install for Firefox
