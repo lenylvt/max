@@ -59,6 +59,7 @@ body {
   inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
   overscroll-behavior: none;
