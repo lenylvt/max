@@ -3,12 +3,12 @@
 
 // Convex HTTP action endpoint (npx convex url → https://<deployment>.convex.site)
 export const CLOUD_API_URL =
-  "https://honorable-fox-698.convex.site/api/complete";
+  "https://wry-albatross-490.convex.site/api/complete";
 
 // Next.js site URL on Vercel
 export const CLOUD_AUTH_URL =
-  "http://localhost:3000/extension-auth";
+  "https://max.lenylvt.cc/extension-auth";
 
 // Pricing / upgrade page
 export const CLOUD_PRICING_URL =
-  "http://localhost:3000/pricing";
+  "https://max.lenylvt.cc/pricing";

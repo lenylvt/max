@@ -8,6 +8,7 @@
     matchShortcut,
     loadShortcut,
     rateLimitHtml,
+    safeHTML,
   } = window.__ailens;
 
   let overlay = null;
@@ -37,7 +38,7 @@
   function createOverlay() {
     const el = document.createElement("div");
     el.className = "ailens-overlay";
-    el.innerHTML = `
+    safeHTML(el, `
       <div class="ailens-summary-container">
         <button class="ailens-close-btn" title="Close (Esc)">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -57,7 +58,7 @@
           </div>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(el);
 
     el.querySelector(".ailens-close-btn").addEventListener(
@@ -95,7 +96,7 @@
     const card =
       overlay.querySelector(".ailens-summary-card") ||
       overlay.querySelector(".ailens-summary-content");
-    card.innerHTML = buildShimmer();
+    safeHTML(card, buildShimmer());
 
     overlay.offsetHeight;
     overlay.classList.add("ailens-visible");
@@ -131,21 +132,21 @@
       if (!isOpen) return;
       const rl = rateLimitHtml(err?.message, "ailens-summary");
       if (rl) {
-        cardEl.innerHTML = rl;
+        safeHTML(cardEl, rl);
       } else {
         // R-13 FIX: Show network-specific error message with appropriate hint
         const errorMsg = window.__ailens.getErrorMessage(err);
         const hint = window.__ailens.isNetworkError(err)
           ? "Check your internet connection and try again."
           : "Check your AI provider settings in the extension options.";
-        cardEl.innerHTML = `
+        safeHTML(cardEl, `
           <div class="ailens-summary-error">
             <div class="ailens-error-icon">${ICONS.warning}</div>
             <p>Could not generate summary</p>
             <p class="ailens-error-hint">${escapeHtml(errorMsg)}</p>
             <p class="ailens-error-hint">${hint}</p>
           </div>
-        `;
+        `);
       }
     }
   }
@@ -160,14 +161,14 @@
     // Hero image
     if (heroSrc) {
       html += `<div class="ailens-card-hero">
-        <img src="${escapeAttr(heroSrc)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">
+        <img src="${escapeAttr(heroSrc)}" alt="" loading="lazy">
       </div>`;
     }
 
     // Source line
     html += `
       <div class="ailens-card-source">
-        <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32" alt="" onerror="this.style.display='none'">
+        <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32" alt="">
         <span>${escapeHtml(domain)}</span>
       </div>
     `;
@@ -214,7 +215,13 @@
       html += `</div>`;
     }
 
-    cardEl.innerHTML = html;
+    safeHTML(cardEl, html);
+
+    // Hide hero container if image fails to load
+    const heroImg = cardEl.querySelector(".ailens-card-hero img");
+    if (heroImg) {
+      heroImg.addEventListener("error", () => { heroImg.parentElement.style.display = "none"; }, { once: true });
+    }
   }
 
   // ── Message Listener ──────────────────────────────────────────────────

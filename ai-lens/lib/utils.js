@@ -22,6 +22,20 @@ if (!window.__ailens) {
       .replace(/>/g, "&gt;");
   };
 
+  // ── Safe innerHTML via DOMPurify ────────────────────────────────────────
+
+  window.__ailens.safeHTML = function (el, html) {
+    var clean = DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true, svg: true, svgFilters: true },
+      ADD_ATTR: ["target", "loading"],
+      RETURN_DOM_FRAGMENT: true,
+    });
+    el.replaceChildren(clean);
+    el.querySelectorAll("img").forEach(function (img) {
+      img.addEventListener("error", function () { this.style.display = "none"; }, { once: true });
+    });
+  };
+
   // ── Keyboard shortcut matching ─────────────────────────────────────────
 
   window.__ailens.matchShortcut = function (e, shortcutStr) {

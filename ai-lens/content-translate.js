@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { escapeHtml, matchShortcut, loadShortcut, rateLimitHtml, isNetworkError, getErrorMessage } = window.__ailens;
+  const { escapeHtml, matchShortcut, loadShortcut, rateLimitHtml, isNetworkError, getErrorMessage, safeHTML } = window.__ailens;
 
   let isTranslating = false;
   let isTranslated = false;
@@ -108,16 +108,16 @@
     indicator.className = `ailens-translate-indicator ailens-translate-${type}`;
 
     if (type === "loading") {
-      indicator.innerHTML = `<div class="ailens-spinner ailens-translate-spinner"></div><span>${escapeHtml(text)}</span>`;
+      safeHTML(indicator, `<div class="ailens-spinner ailens-translate-spinner"></div><span>${escapeHtml(text)}</span>`);
     } else if (type === "done" && persistent) {
       // Persistent revert button
-      indicator.innerHTML = `<span>${escapeHtml(text)}</span><button class="ailens-translate-revert-btn">Revert</button>`;
+      safeHTML(indicator, `<span>${escapeHtml(text)}</span><button class="ailens-translate-revert-btn">Revert</button>`);
       indicator.querySelector(".ailens-translate-revert-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         revertTranslation();
       });
     } else {
-      indicator.innerHTML = `<span>${escapeHtml(text)}</span>`;
+      safeHTML(indicator, `<span>${escapeHtml(text)}</span>`);
     }
 
     indicator.classList.add("ailens-translate-visible");
@@ -152,9 +152,9 @@
     const url = data.upgradeUrl || "#";
     const safeUrl = url.startsWith("https://") || url === "#" ? url : "#";
     indicator.className = "ailens-translate-indicator ailens-translate-error ailens-translate-visible";
-    indicator.innerHTML =
+    safeHTML(indicator,
       `<span>Daily limit reached (${data.count}/${data.limit})</span>` +
-      `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener" class="ailens-translate-upgrade-btn">Upgrade to Pro</a>`;
+      `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener" class="ailens-translate-upgrade-btn">Upgrade to Pro</a>`);
   }
 
   // ── Apply translation to an element's text nodes ──────────────────────
@@ -342,7 +342,7 @@
         if (!html) continue; // Element was garbage collected
         // H-1 FIX: Sanitize HTML before restoring to prevent XSS from captured content
         if (typeof DOMPurify !== "undefined") {
-          el.innerHTML = DOMPurify.sanitize(html, { ADD_ATTR: ["target"] });
+          safeHTML(el, html);
         } else {
           // Fallback: use textContent if DOMPurify unavailable
           el.textContent = html.replace(/<[^>]*>/g, "");

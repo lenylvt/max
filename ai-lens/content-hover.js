@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { escapeHtml, escapeAttr, rateLimitHtml } = window.__ailens;
+  const { escapeHtml, escapeAttr, rateLimitHtml, safeHTML } = window.__ailens;
 
   // ── Search Engine Link Selectors ────────────────────────────────────────
   const SEARCH_SELECTORS = {
@@ -90,12 +90,12 @@
     positionCard(link);
 
     // Shimmer loading skeleton
-    card.innerHTML = `
+    safeHTML(card, `
       <div class="ailens-preview-loading">
         <div class="ailens-shimmer ailens-preview-shimmer"></div>
         <div class="ailens-shimmer ailens-preview-shimmer" style="width:75%"></div>
       </div>
-    `;
+    `);
     card.classList.add("ailens-visible", "ailens-loading");
     card.classList.remove("ailens-loaded");
     card.style.pointerEvents = "auto";
@@ -126,7 +126,7 @@
       const parts = [];
       if (result.ogImage) {
         parts.push(
-          `<img class="ailens-preview-og" src="${escapeAttr(result.ogImage)}" alt="" onerror="this.style.display='none'">`,
+          `<img class="ailens-preview-og" src="${escapeAttr(result.ogImage)}" alt="">`,
         );
       }
       parts.push(`<div class="ailens-preview-body">`);
@@ -138,7 +138,7 @@
       );
       if (result.domain) {
         parts.push(
-          `<div class="ailens-preview-domain"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(result.domain)}&sz=32" alt="" onerror="this.style.display='none'"><span>${escapeHtml(result.domain)}</span></div>`,
+          `<div class="ailens-preview-domain"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(result.domain)}&sz=32" alt=""><span>${escapeHtml(result.domain)}</span></div>`,
         );
       }
       parts.push(`</div>`);
@@ -147,7 +147,7 @@
 
       // Trigger curtain animation
       card.classList.remove("ailens-loading");
-      card.innerHTML = parts.join("");
+      safeHTML(card, parts.join(""));
       void card.offsetWidth;
       card.classList.add("ailens-loaded");
     } catch (err) {
@@ -157,7 +157,7 @@
         const rl = rateLimitHtml(err?.message, "ailens-hover");
         // R-13 FIX: Show network-specific error message
         const errorMsg = rl || `<div class="ailens-preview-error">${window.__ailens.escapeHtml(window.__ailens.getErrorMessage(err))}</div>`;
-        card.innerHTML = errorMsg;
+        safeHTML(card, errorMsg);
         void card.offsetWidth;
         card.classList.add("ailens-loaded");
       }

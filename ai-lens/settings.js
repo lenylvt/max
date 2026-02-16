@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const models = result.models || [];
-      modelEl.innerHTML = "";
+      modelEl.textContent = "";
 
       if (models.length > 0) {
         models.forEach((m) => {
@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function populateDefaultModels(selectedModel) {
-    modelEl.innerHTML = "";
+    modelEl.textContent = "";
 
     if (providerEl.value === "custom") {
       const opt = document.createElement("option");
@@ -336,12 +336,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   toggleKeyBtn.addEventListener("click", () => {
     const isPassword = apikeyEl.type === "password";
     apikeyEl.type = isPassword ? "text" : "password";
-    // Update icon
+    // Update icon using DOM APIs (no innerHTML)
     const eyeIcon = document.getElementById("eye-icon");
+    const ns = "http://www.w3.org/2000/svg";
+    while (eyeIcon.firstChild) eyeIcon.removeChild(eyeIcon.firstChild);
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", "M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z");
+    const circle = document.createElementNS(ns, "circle");
+    circle.setAttribute("cx", "8"); circle.setAttribute("cy", "8"); circle.setAttribute("r", "2");
+    eyeIcon.append(path, circle);
     if (isPassword) {
-      eyeIcon.innerHTML = `<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" /><circle cx="8" cy="8" r="2" /><line x1="2" y1="14" x2="14" y2="2" />`;
-    } else {
-      eyeIcon.innerHTML = `<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" /><circle cx="8" cy="8" r="2" />`;
+      const line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", "2"); line.setAttribute("y1", "14");
+      line.setAttribute("x2", "14"); line.setAttribute("y2", "2");
+      eyeIcon.appendChild(line);
     }
   });
 
@@ -487,8 +495,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     testBtn.disabled = true;
-    const origHTML = testBtn.innerHTML;
-    testBtn.innerHTML = `<svg class="spinning-inline" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1v5h5"/><path d="M15 15v-5h-5"/><path d="M2.5 6A6.5 6.5 0 0112.3 3.2L15 6M13.5 10A6.5 6.5 0 013.7 12.8L1 10"/></svg> Testing...`;
+    const origNodes = Array.from(testBtn.childNodes, n => n.cloneNode(true));
+    // Build spinner using DOM APIs (no innerHTML)
+    const ns = "http://www.w3.org/2000/svg";
+    const spinSvg = document.createElementNS(ns, "svg");
+    spinSvg.setAttribute("class", "spinning-inline");
+    spinSvg.setAttribute("width", "14"); spinSvg.setAttribute("height", "14");
+    spinSvg.setAttribute("viewBox", "0 0 16 16"); spinSvg.setAttribute("fill", "none");
+    spinSvg.setAttribute("stroke", "currentColor"); spinSvg.setAttribute("stroke-width", "1.5");
+    const p1 = document.createElementNS(ns, "path"); p1.setAttribute("d", "M1 1v5h5");
+    const p2 = document.createElementNS(ns, "path"); p2.setAttribute("d", "M15 15v-5h-5");
+    const p3 = document.createElementNS(ns, "path"); p3.setAttribute("d", "M2.5 6A6.5 6.5 0 0112.3 3.2L15 6M13.5 10A6.5 6.5 0 013.7 12.8L1 10");
+    spinSvg.append(p1, p2, p3);
+    testBtn.replaceChildren(spinSvg, document.createTextNode(" Testing..."));
     showStatus("Connecting...", "info");
 
     try {
@@ -504,7 +523,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     } finally {
       testBtn.disabled = false;
-      testBtn.innerHTML = origHTML;
+      testBtn.replaceChildren(...origNodes);
     }
   });
 

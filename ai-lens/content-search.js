@@ -8,6 +8,7 @@
     extractPageContent,
     renderInlineMarkdown,
     rateLimitHtml,
+    safeHTML,
   } = window.__ailens;
 
   let searchBar = null;
@@ -21,7 +22,7 @@
   function createSearchBar() {
     const bar = document.createElement("div");
     bar.className = "ailens-search-bar";
-    bar.innerHTML = `
+    safeHTML(bar, `
       <div class="ailens-search-inner">
         <div class="ailens-search-input-wrap">
           <svg class="ailens-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -44,7 +45,7 @@
         </div>
       </div>
       <div class="ailens-search-answer"></div>
-    `;
+    `);
     document.body.appendChild(bar);
 
     // Event listeners
@@ -60,7 +61,7 @@
 
       if (!val.startsWith("?")) {
         performTextSearch(val);
-        answerEl.innerHTML = "";
+        answerEl.textContent = "";
         answerEl.classList.remove("ailens-search-answer-visible");
       } else {
         clearHighlights();
@@ -101,7 +102,7 @@
 
   function setAIMode(on) {
     if (!searchBar) return;
-    searchBar.querySelector(".ailens-search-icon").innerHTML = on ? ICON_AI : ICON_SEARCH;
+    safeHTML(searchBar.querySelector(".ailens-search-icon"), on ? ICON_AI : ICON_SEARCH);
     const display = on ? "none" : "";
     searchBar.querySelector(".ailens-search-prev").style.display = display;
     searchBar.querySelector(".ailens-search-next").style.display = display;
@@ -246,12 +247,12 @@
 
     const answerEl = searchBar.querySelector(".ailens-search-answer");
     answerEl.classList.add("ailens-search-answer-visible");
-    answerEl.innerHTML = `
+    safeHTML(answerEl, `
       <div class="ailens-loading">
         <div class="ailens-spinner"></div>
         <span>Thinking...</span>
       </div>
-    `;
+    `);
 
     try {
       const page = extractPageContent();
@@ -268,13 +269,13 @@
       if (!isOpen) return;
 
       const html = renderInlineMarkdown(result.answer || "No answer available.");
-      answerEl.innerHTML = `<div class="ailens-content ailens-search-answer-content">${html}</div>`;
+      safeHTML(answerEl, `<div class="ailens-content ailens-search-answer-content">${html}</div>`);
     } catch (err) {
       const rl = rateLimitHtml(err?.message, "ailens-search");
       // R-13 FIX: Show network-specific error message
-      answerEl.innerHTML =
+      safeHTML(answerEl,
         rl ||
-        `<div class="ailens-error">${escapeHtml(window.__ailens.getErrorMessage(err))}</div>`;
+        `<div class="ailens-error">${escapeHtml(window.__ailens.getErrorMessage(err))}</div>`);
     }
   }
 

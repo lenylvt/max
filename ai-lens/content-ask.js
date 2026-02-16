@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { escapeHtml, renderInlineMarkdown, rateLimitHtml } = window.__ailens;
+  const { escapeHtml, renderInlineMarkdown, rateLimitHtml, safeHTML } = window.__ailens;
 
   let panel = null;
   let isOpen = false;
@@ -97,7 +97,7 @@
   function createPanel() {
     const el = document.createElement("div");
     el.className = "ailens-ask-panel";
-    el.innerHTML = `
+    safeHTML(el, `
       <div class="ailens-ask-panel-input-wrap">
         <input type="text" class="ailens-ask-panel-input" placeholder="Ask about selection..." spellcheck="false" />
         <button class="ailens-ask-panel-submit" title="Ask">
@@ -107,7 +107,7 @@
         </button>
       </div>
       <div class="ailens-ask-panel-answer"></div>
-    `;
+    `);
     document.body.appendChild(el);
 
     const input = el.querySelector(".ailens-ask-panel-input");
@@ -144,7 +144,7 @@
     const answerEl = panel.querySelector(".ailens-ask-panel-answer");
     const input = panel.querySelector(".ailens-ask-panel-input");
 
-    answerEl.innerHTML = "";
+    answerEl.textContent = "";
     answerEl.classList.remove("ailens-ask-panel-answer-visible");
     input.value = "";
 
@@ -197,12 +197,12 @@
 
     const answerEl = panel.querySelector(".ailens-ask-panel-answer");
     answerEl.classList.add("ailens-ask-panel-answer-visible");
-    answerEl.innerHTML = `
+    safeHTML(answerEl, `
       <div class="ailens-loading">
         <div class="ailens-spinner"></div>
         <span>Thinking...</span>
       </div>
-    `;
+    `);
 
     try {
       const result = await browser.runtime.sendMessage({
@@ -216,13 +216,13 @@
       if (!isOpen) return;
 
       const html = renderInlineMarkdown(result.answer || "No answer available.");
-      answerEl.innerHTML = `<div class="ailens-content ailens-ask-answer-content">${html}</div>`;
+      safeHTML(answerEl, `<div class="ailens-content ailens-ask-answer-content">${html}</div>`);
     } catch (err) {
       const rl = rateLimitHtml(err?.message, "ailens-ask");
       // R-13 FIX: Show network-specific error message
-      answerEl.innerHTML =
+      safeHTML(answerEl,
         rl ||
-        `<div class="ailens-error">${escapeHtml(window.__ailens.getErrorMessage(err))}</div>`;
+        `<div class="ailens-error">${escapeHtml(window.__ailens.getErrorMessage(err))}</div>`);
     }
   }
 
